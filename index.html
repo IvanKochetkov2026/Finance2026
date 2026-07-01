@@ -727,42 +727,67 @@ function stopListening(){
 
 async function parseWithAI(text){
   document.getElementById('voiceStatus').textContent = '🤖 Распознаю...';
-  document.getElementById('voiceBtns').style.display = 'none';
-  document.getElementById('voiceParsed').style.display = 'none';
 
-  const prompt = `Ты помощник по учёту финансов. Разбери фразу пользователя и верни ТОЛЬКО JSON без пояснений и markdown:
+  // Локальный парсер — работает без интернета и API
+  const t = text.toLowerCase();
 
-Фраза: "${text}"
+  // Тип операции
+  const incomeWords = ['получил','получила','зарплата','зарплату','заработал','заработала','заработок','подработка','подработку','подарил','подарок','доход','пришло','перевели','перевод','выплатили','выплата','продал','продала','вернули','вернул','инвестиции','дивиденды','премия','премию','аванс'];
+  const expenseWords = ['потратил','потратила','купил','купила','заплатил','заплатила','оплатил','оплатила','потрачено','списали','списалось','расход','вышло','ушло','стоило','стоит'];
 
-Категории доходов: Зарплата, Подработка, Подарок, Инвестиции, Другое
-Категории расходов: Еда, Транспорт, Жильё, Развлечения, Здоровье, Покупки, Другое
+  let type = 'expense'; // по умолчанию расход
+  if(incomeWords.some(w => t.includes(w))) type = 'income';
+  if(expenseWords.some(w => t.includes(w))) type = 'expense';
+  // Если есть оба — побеждает более специфичный
+  const hasIncome = incomeWords.some(w => t.includes(w));
+  const hasExpense = expenseWords.some(w => t.includes(w));
+  if(hasIncome && !hasExpense) type = 'income';
+  if(hasExpense) type = 'expense';
+  if(hasIncome && !hasExpense) type = 'income';
 
-Верни JSON:
-{"type":"income|expense","amount":число,"category":"категория из списка","note":"короткая заметка или пустая строка"}
-
-Если сумму не удалось определить — amount: 0. Отвечай ТОЛЬКО JSON.`;
-
-  try{
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:200,
-        messages:[{role:'user', content: prompt}]
-      })
-    });
-    const data = await res.json();
-    const raw = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    parsedVoice = JSON.parse(raw);
-    parsedVoice.date = new Date().toISOString().slice(0,10);
-    showParsed(parsedVoice);
-  } catch(e){
-    document.getElementById('voiceStatus').textContent = '❌ Не удалось распознать. Попробуй ещё раз.';
-    document.getElementById('voiceBtns').style.display = 'flex';
-    document.getElementById('voiceRetry').style.display = 'block';
-    document.getElementById('voiceSave').style.display = 'none';
+  // Сумма: ищем числа (с пробелами внутри типа "50 000", с запятой/точкой)
+  const numMatch = text.replace(/\s/g, '').match(/\d[\d\s.,]*/);
+  let amount = 0;
+  if(numMatch){
+    const cleaned = numMatch[0].replace(/\s/g,'').replace(',','.');
+    amount = parseFloat(cleaned) || 0;
   }
+  // Ещё попытка — ищем числа с пробелами
+  if(!amount){
+    const m2 = text.match(/(\d[\d\s]*\d|\d)/g);
+    if(m2){
+      const best = m2.map(s=>parseFloat(s.replace(/\s/g,''))).sort((a,b)=>b-a)[0];
+      amount = best || 0;
+    }
+  }
+
+  // Категория
+  const catRules = type === 'income' ? [
+    {cat:'Зарплата',   words:['зарплат','оклад','ставка']},
+    {cat:'Подработка', words:['подработ','фриланс','халтур','заказ']},
+    {cat:'Подарок',    words:['подарок','подарили','подарил']},
+    {cat:'Инвестиции', words:['инвестиц','дивиденд','акц','крипт','вложен']},
+    {cat:'Другое',     words:[]},
+  ] : [
+    {cat:'Еда',          words:['еда','едой','продукт','магазин','ресторан','кафе','кофе','обед','ужин','завтрак','супермаркет','хлеб','мясо','овощ','фрукт','перекус','доставка еды','еды']},
+    {cat:'Транспорт',    words:['такси','маршрут','автобус','метро','бензин','парковк','проезд','транспорт','uber','яндекс такси','топливо','заправк']},
+    {cat:'Жильё',        words:['аренд','квартир','комунал','коммунал','электр','газ','вода','интернет','жкх','жильё','жилье','ипотек']},
+    {cat:'Развлечения',  words:['кино','театр','концерт','развлеч','клуб','бар','игр','подписк','netflix','spotify','youtube']},
+    {cat:'Здоровье',     words:['аптек','лекарств','врач','больниц','клиник','здоровь','медицин','таблетк','витамин','стоматолог']},
+    {cat:'Покупки',      words:['одежд','обувь','телефон','технику','технику','электроник','мебель','магазин','маркет','wildberries','ozon','покупк']},
+    {cat:'Другое',       words:[]},
+  ];
+
+  let category = catRules[catRules.length-1].cat;
+  for(const rule of catRules){
+    if(rule.words.some(w => t.includes(w))){ category = rule.cat; break; }
+  }
+
+  // Заметка — исходный текст
+  const note = text.length < 80 ? text : text.slice(0,77)+'...';
+
+  parsedVoice = {type, amount, category, note, date: new Date().toISOString().slice(0,10)};
+  showParsed(parsedVoice);
 }
 
 function showParsed(p){
