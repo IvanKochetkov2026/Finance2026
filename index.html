@@ -480,7 +480,7 @@ function renderDonut(exp){
 }
 
 // ── VOICE ─────────────────────────────────────────────────
-let recog=null, recOn=false, voiceData=null;
+let recog=null, recOn=false, voiceData=null, lastTranscript='';
 
 function openVoice(){
   document.getElementById('vBd').classList.add('on');
@@ -491,7 +491,7 @@ function closeVoice(){
   document.getElementById('vBd').classList.remove('on');
 }
 function resetVoice(){
-  recOn=false; voiceData=null;
+  recOn=false; voiceData=null; lastTranscript='';
   document.getElementById('vSt').textContent='Нажми 🎙️ и говори фразу';
   document.getElementById('vWave').className='v-wave';
   document.getElementById('vTxt').textContent='Например: «потратил 500 на еду» или «зарплата 50000»';
@@ -514,10 +514,13 @@ function startRec(){
     document.getElementById('vSt').textContent='❌ Только Safari поддерживает голосовой ввод на iPhone';
     return;
   }
+
+  lastTranscript='';
   recog=new SR();
   recog.lang='ru-RU';
-  recog.interimResults=false;
-  recog.maxAlternatives=3;
+  recog.interimResults=true;
+  recog.maxAlternatives=1;
+  recog.continuous=false;
 
   recog.onstart=()=>{
     recOn=true;
@@ -525,14 +528,25 @@ function startRec(){
     document.getElementById('vWave').className='v-wave on';
     document.getElementById('vRec').className='v-rec on';
     document.getElementById('vRec').textContent='⏹';
-    document.getElementById('vTxt').textContent='';
+    document.getElementById('vTxt').textContent='...';
     document.getElementById('vTxt').className='v-text filled';
+    document.getElementById('vParsed').style.display='none';
+    document.getElementById('vBtns').className='v-btns';
+    voiceData=null;
   };
 
   recog.onresult=e=>{
-    const txt=e.results[0][0].transcript;
-    document.getElementById('vTxt').textContent=txt;
-    parse(txt);
+    // Собираем все результаты — и промежуточные и финальные
+    let interim='', final='';
+    for(let i=0;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    const txt=(final||interim).trim();
+    if(txt){
+      lastTranscript=txt;
+      document.getElementById('vTxt').textContent=txt;
+    }
   };
 
   recog.onend=()=>{
@@ -540,8 +554,15 @@ function startRec(){
     document.getElementById('vWave').className='v-wave';
     document.getElementById('vRec').className='v-rec';
     document.getElementById('vRec').textContent='🎙️';
-    const t=document.getElementById('vTxt').textContent;
-    if(t&&!voiceData) parse(t);
+
+    const text=lastTranscript.trim();
+    if(text){
+      parse(text);
+    } else {
+      document.getElementById('vSt').textContent='Ничего не услышал — попробуй ещё раз';
+      document.getElementById('vBtns').className='v-btns on';
+      document.getElementById('vSave').disabled=true;
+    }
   };
 
   recog.onerror=e=>{
@@ -550,47 +571,43 @@ function startRec(){
     document.getElementById('vRec').className='v-rec';
     document.getElementById('vRec').textContent='🎙️';
     if(e.error==='not-allowed')
-      document.getElementById('vSt').textContent='❌ Разреши доступ к микрофону в настройках Safari → Конфиденциальность';
+      document.getElementById('vSt').textContent='❌ Разреши микрофон: Настройки Safari → Конфиденциальность → Микрофон';
     else if(e.error==='no-speech')
-      document.getElementById('vSt').textContent='Ничего не услышал. Попробуй ещё раз.';
+      document.getElementById('vSt').textContent='Тихо — скажи фразу громче и чётче';
     else
-      document.getElementById('vSt').textContent='Ошибка: '+e.error+'. Попробуй ещё раз.';
+      document.getElementById('vSt').textContent='Ошибка: '+e.error;
     document.getElementById('vBtns').className='v-btns on';
   };
 
-  try{ recog.start(); } catch(e){ document.getElementById('vSt').textContent='Ошибка запуска: '+e.message; }
+  try{ recog.start(); }
+  catch(err){ document.getElementById('vSt').textContent='Не удалось запустить: '+err.message; }
 }
 
 function stopRec(){
-  if(recog) try{ recog.stop(); }catch(e){}
+  if(recog) try{ recog.abort(); }catch(e){}
   recOn=false;
 }
 
 function parse(text){
   const t=text.toLowerCase();
 
-  // Тип
   const INC=['получил','получила','зарплат','заработал','заработала','подработ','подарок','подарили','доход','пришло','перевели','перевод','выплатили','выплата','продал','продала','вернули','вернул','инвестиц','дивиденд','премию','премия','аванс','фриланс'];
   const EXP=['потратил','потратила','купил','купила','заплатил','заплатила','оплатил','оплатила','потрачено','списали','расход','ушло','стоило'];
   const hasI=INC.some(w=>t.includes(w));
   const hasE=EXP.some(w=>t.includes(w));
-  let type = hasI&&!hasE ? 'income' : 'expense';
+  const type=(hasI&&!hasE)?'income':'expense';
 
-  // Сумма
-  const nums=text.match(/\d[\d\s]*/g);
-  let amount=0;
-  if(nums){
-    const vals=nums.map(n=>parseFloat(n.replace(/\s/g,'')));
-    amount=Math.max(...vals.filter(v=>!isNaN(v)));
-  }
+  // Извлечь сумму — ищем числа, берём наибольшее
+  const nums=text.match(/\d[\d\s.,]*/g)||[];
+  const vals=nums.map(n=>parseFloat(n.replace(/\s/g,'').replace(',','.'))).filter(v=>!isNaN(v)&&v>0);
+  const amount=vals.length?Math.max(...vals):0;
 
-  // Категория
-  const rules = type==='income' ? [
+  const rules=type==='income'?[
     {cat:'Зарплата',   w:['зарплат','оклад']},
     {cat:'Подработка', w:['подработ','фриланс','халтур']},
     {cat:'Подарок',    w:['подарок','подарили']},
     {cat:'Инвестиции', w:['инвестиц','дивиденд','акц']},
-  ] : [
+  ]:[
     {cat:'Еда',         w:['еда','едой','продукт','магазин','ресторан','кафе','кофе','обед','ужин','завтрак','хлеб','мясо','овощ','фрукт','перекус']},
     {cat:'Транспорт',   w:['такси','автобус','маршрут','метро','бензин','заправк','парковк','проезд','uber','яндекс']},
     {cat:'Жильё',       w:['аренд','квартир','коммунал','электр','интернет','жкх','ипотек']},
@@ -603,11 +620,10 @@ function parse(text){
 
   voiceData={type,amount,category,note:text,date:new Date().toISOString().slice(0,10)};
 
-  // Показать результат
-  document.getElementById('vSt').textContent='✅ Распознано — проверь:';
+  document.getElementById('vSt').textContent=amount?'✅ Проверь и сохрани:':'⚠️ Сумму не услышал — введи вручную:';
   document.getElementById('pvT').textContent=type==='income'?'Доход ↓':'Расход ↑';
   document.getElementById('pvT').className='pval '+(type==='income'?'in':'out');
-  document.getElementById('pvA').textContent=fmt(amount)+' сом';
+  document.getElementById('pvA').textContent=amount?fmt(amount)+' сом':'не распознана';
   document.getElementById('pvC').textContent=category;
   document.getElementById('pvN').textContent=text;
   document.getElementById('pvNR').style.display='flex';
