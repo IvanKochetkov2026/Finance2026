@@ -128,7 +128,6 @@
   .bd-pct{font-size:12.5px; color:var(--muted); width:36px; text-align:right; flex:none;}
 
   .fab{
-    position:fixed; right:20px; bottom:calc(env(safe-area-inset-bottom,0px) + 22px);
     width:58px; height:58px; border-radius:50%; background:var(--teal); color:#fff;
     border:none; font-size:28px; box-shadow:0 8px 20px rgba(31,77,67,0.35);
     display:flex; align-items:center; justify-content:center;
@@ -163,6 +162,38 @@
   .save-btn:disabled{opacity:.4;}
   .close-x{position:absolute; right:18px; top:18px; width:30px; height:30px; border-radius:50%; background:var(--surface); border:1px solid var(--line); color:var(--muted); font-size:15px;}
   .sheet-head{position:relative;}
+
+  /* Voice */
+  .fab-row{position:fixed; right:20px; bottom:calc(env(safe-area-inset-bottom,0px) + 22px); display:flex; flex-direction:column; align-items:center; gap:12px;}
+  .fab{width:58px; height:58px; border-radius:50%; background:var(--teal); color:#fff; border:none; font-size:28px; box-shadow:0 8px 20px rgba(31,77,67,0.35); display:flex; align-items:center; justify-content:center;}
+  .fab-mic{width:46px; height:46px; border-radius:50%; background:var(--surface); border:2px solid var(--line); color:var(--ink); font-size:20px; box-shadow:0 4px 14px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center;}
+  .fab-mic.listening{background:var(--expense); border-color:var(--expense); color:#fff; animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(182,80,46,0.4);}50%{box-shadow:0 0 0 10px rgba(182,80,46,0);}}
+
+  .voice-sheet{background:var(--bg); width:100%; border-radius:24px 24px 0 0; padding:22px 20px calc(env(safe-area-inset-bottom,0px) + 22px); display:none;}
+  .voice-sheet.open{display:block;}
+  .voice-status{text-align:center; padding:16px 0 10px; color:var(--muted); font-size:14px;}
+  .voice-wave{display:flex; align-items:center; justify-content:center; gap:5px; height:40px; margin:8px 0;}
+  .wave-bar{width:4px; border-radius:3px; background:var(--teal); height:6px; transition:height 0.15s;}
+  .listening .wave-bar{animation:wave 0.8s ease-in-out infinite;}
+  .wave-bar:nth-child(2){animation-delay:0.1s;}
+  .wave-bar:nth-child(3){animation-delay:0.2s;}
+  .wave-bar:nth-child(4){animation-delay:0.3s;}
+  .wave-bar:nth-child(5){animation-delay:0.15s;}
+  @keyframes wave{0%,100%{height:6px;}50%{height:28px;}}
+  .voice-transcript{background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:13px 14px; font-size:15px; color:var(--ink); min-height:46px; margin:10px 0;}
+  .voice-parsed{display:none; margin-top:14px;}
+  .parsed-row{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .parsed-row:last-child{border:none;}
+  .parsed-lbl{font-size:12.5px; color:var(--muted); width:80px; flex:none;}
+  .parsed-val{font-size:15px; font-weight:600; flex:1;}
+  .parsed-val.income-color{color:var(--income);}
+  .parsed-val.expense-color{color:var(--expense);}
+  .voice-btns{display:flex; gap:10px; margin-top:16px;}
+  .v-cancel{flex:1; padding:13px; border-radius:13px; border:1px solid var(--line); background:var(--surface); font-size:15px; font-weight:600; color:var(--muted);}
+  .v-save{flex:2; padding:13px; border-radius:13px; border:none; background:var(--teal); color:#fff; font-size:15px; font-weight:600;}
+  .v-save:disabled{opacity:.35;}
+  .voice-hint{font-size:12px; color:var(--muted); text-align:center; margin-top:14px; line-height:1.6;}
 </style>
 </head>
 <body>
@@ -235,7 +266,10 @@
   </div>
 </main>
 
-<button class="fab" id="addBtn">+</button>
+<div class="fab-row">
+  <button class="fab-mic" id="micBtn" title="Голосовой ввод">🎙️</button>
+  <button class="fab" id="addBtn">+</button>
+</div>
 
 <div class="sheet-backdrop" id="backdrop">
   <div class="sheet">
@@ -266,12 +300,64 @@
   </div>
 </div>
 
+<!-- Voice Sheet -->
+<div class="sheet-backdrop" id="voiceBackdrop">
+  <div class="voice-sheet" id="voiceSheet">
+    <div class="sheet-head" style="position:relative; margin-bottom:4px;">
+      <h2 style="font-size:18px;font-weight:600;margin:4px 0 0;">Голосовой ввод</h2>
+      <button class="close-x" id="voiceCloseBtn">✕</button>
+    </div>
+
+    <div class="voice-status" id="voiceStatus">Нажми кнопку и говори</div>
+    <div class="voice-wave" id="voiceWave">
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+    </div>
+
+    <div class="voice-transcript" id="voiceTranscript" style="color:var(--muted)">Например: «потратил 500 сом на продукты»</div>
+
+    <div class="voice-parsed" id="voiceParsed">
+      <div class="parsed-row">
+        <span class="parsed-lbl">Тип</span>
+        <span class="parsed-val" id="pvType">—</span>
+      </div>
+      <div class="parsed-row">
+        <span class="parsed-lbl">Сумма</span>
+        <span class="parsed-val" id="pvAmount">—</span>
+      </div>
+      <div class="parsed-row">
+        <span class="parsed-lbl">Категория</span>
+        <span class="parsed-val" id="pvCat">—</span>
+      </div>
+      <div class="parsed-row" id="pvNoteRow" style="display:none;">
+        <span class="parsed-lbl">Заметка</span>
+        <span class="parsed-val" id="pvNote" style="font-weight:400;font-size:14px;"></span>
+      </div>
+    </div>
+
+    <div class="voice-btns" style="display:none;" id="voiceBtns">
+      <button class="v-cancel" id="voiceRetry">🎙️ Ещё раз</button>
+      <button class="v-save" id="voiceSave">Сохранить</button>
+    </div>
+
+    <div style="text-align:center; margin-top:16px;">
+      <button id="voiceRecordBtn" style="width:64px;height:64px;border-radius:50%;background:var(--teal);border:none;color:#fff;font-size:26px;box-shadow:0 6px 18px rgba(31,77,67,0.3);">🎙️</button>
+    </div>
+
+    <div class="voice-hint">
+      Примеры фраз:<br>
+      «Получил зарплату 50 000» · «Потратил 1200 на еду»<br>
+      «Заплатил за такси 300» · «Подработка 5000 сом»
+    </div>
+  </div>
+</div>
+
 <script>
 const CATS = {
   income: ['Зарплата','Подработка','Подарок','Инвестиции','Другое'],
   expense: ['Еда','Транспорт','Жильё','Развлечения','Здоровье','Покупки','Другое']
 };
-const STORAGE_KEY = 'transactions';
+const STORAGE_KEY = 'koshelek_transactions';
 let txs = [];
 let currentType = 'income';
 let currentCat = '';
@@ -279,15 +365,15 @@ let activeFilter = 'all';
 
 const fmt = n => Math.round(n).toLocaleString('ru-RU');
 
-async function load(){
+function load(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    txs = res ? JSON.parse(res.value) : [];
+    const raw = localStorage.getItem(STORAGE_KEY);
+    txs = raw ? JSON.parse(raw) : [];
   }catch(e){ txs = []; }
   render();
 }
-async function save(){
-  try{ await window.storage.set(STORAGE_KEY, JSON.stringify(txs), false); }
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(txs)); }
   catch(e){ console.error('storage failed', e); }
 }
 
@@ -553,6 +639,162 @@ function renderDonut(expenses){
     </div>`;
   }).join('');
 }
+
+// ── VOICE ──────────────────────────────────────────────
+let recognition = null;
+let isListening = false;
+let parsedVoice = null;
+
+document.getElementById('micBtn').onclick = openVoiceSheet;
+document.getElementById('voiceCloseBtn').onclick = closeVoiceSheet;
+document.getElementById('voiceBackdrop').onclick = (e)=>{ if(e.target.id==='voiceBackdrop') closeVoiceSheet(); };
+document.getElementById('voiceRecordBtn').onclick = startListening;
+document.getElementById('voiceRetry').onclick = startListening;
+document.getElementById('voiceSave').onclick = saveVoiceTx;
+
+function openVoiceSheet(){
+  document.getElementById('voiceBackdrop').classList.add('open');
+  resetVoiceUI();
+}
+function closeVoiceSheet(){
+  stopListening();
+  document.getElementById('voiceBackdrop').classList.remove('open');
+}
+function resetVoiceUI(){
+  document.getElementById('voiceStatus').textContent = 'Нажми кнопку и говори';
+  document.getElementById('voiceTranscript').textContent = 'Например: «потратил 500 сом на продукты»';
+  document.getElementById('voiceTranscript').style.color = 'var(--muted)';
+  document.getElementById('voiceParsed').style.display = 'none';
+  document.getElementById('voiceBtns').style.display = 'none';
+  document.getElementById('voiceWave').className = 'voice-wave';
+  document.getElementById('voiceRecordBtn').textContent = '🎙️';
+  parsedVoice = null;
+}
+
+function startListening(){
+  if(isListening){ stopListening(); return; }
+  resetVoiceUI();
+
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRec){
+    document.getElementById('voiceStatus').textContent = '❌ Голосовой ввод не поддерживается в этом браузере. Используй Safari.';
+    return;
+  }
+
+  recognition = new SpeechRec();
+  recognition.lang = 'ru-RU';
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = ()=>{
+    isListening = true;
+    document.getElementById('voiceStatus').textContent = '🔴 Слушаю...';
+    document.getElementById('voiceWave').className = 'voice-wave listening';
+    document.getElementById('voiceRecordBtn').textContent = '⏹';
+    document.getElementById('voiceTranscript').style.color = 'var(--ink)';
+  };
+
+  recognition.onresult = (e)=>{
+    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
+    document.getElementById('voiceTranscript').textContent = transcript;
+  };
+
+  recognition.onend = ()=>{
+    isListening = false;
+    document.getElementById('voiceWave').className = 'voice-wave';
+    document.getElementById('voiceRecordBtn').textContent = '🎙️';
+    const text = document.getElementById('voiceTranscript').textContent;
+    if(text && text !== 'Например: «потратил 500 сом на продукты»'){
+      parseWithAI(text);
+    }
+  };
+
+  recognition.onerror = (e)=>{
+    isListening = false;
+    document.getElementById('voiceWave').className = 'voice-wave';
+    document.getElementById('voiceStatus').textContent = e.error === 'not-allowed'
+      ? '❌ Нет доступа к микрофону. Разреши в настройках Safari.'
+      : '❌ Ошибка: ' + e.error;
+  };
+
+  recognition.start();
+}
+
+function stopListening(){
+  if(recognition) try{ recognition.stop(); }catch(e){}
+  isListening = false;
+}
+
+async function parseWithAI(text){
+  document.getElementById('voiceStatus').textContent = '🤖 Распознаю...';
+  document.getElementById('voiceBtns').style.display = 'none';
+  document.getElementById('voiceParsed').style.display = 'none';
+
+  const prompt = `Ты помощник по учёту финансов. Разбери фразу пользователя и верни ТОЛЬКО JSON без пояснений и markdown:
+
+Фраза: "${text}"
+
+Категории доходов: Зарплата, Подработка, Подарок, Инвестиции, Другое
+Категории расходов: Еда, Транспорт, Жильё, Развлечения, Здоровье, Покупки, Другое
+
+Верни JSON:
+{"type":"income|expense","amount":число,"category":"категория из списка","note":"короткая заметка или пустая строка"}
+
+Если сумму не удалось определить — amount: 0. Отвечай ТОЛЬКО JSON.`;
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:200,
+        messages:[{role:'user', content: prompt}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    parsedVoice = JSON.parse(raw);
+    parsedVoice.date = new Date().toISOString().slice(0,10);
+    showParsed(parsedVoice);
+  } catch(e){
+    document.getElementById('voiceStatus').textContent = '❌ Не удалось распознать. Попробуй ещё раз.';
+    document.getElementById('voiceBtns').style.display = 'flex';
+    document.getElementById('voiceRetry').style.display = 'block';
+    document.getElementById('voiceSave').style.display = 'none';
+  }
+}
+
+function showParsed(p){
+  document.getElementById('voiceStatus').textContent = '✅ Распознано:';
+  const typeEl = document.getElementById('pvType');
+  typeEl.textContent = p.type === 'income' ? 'Доход' : 'Расход';
+  typeEl.className = 'parsed-val ' + (p.type==='income'?'income-color':'expense-color');
+  document.getElementById('pvAmount').textContent = fmt(p.amount) + ' сом';
+  document.getElementById('pvCat').textContent = p.category;
+  const noteRow = document.getElementById('pvNoteRow');
+  if(p.note){ noteRow.style.display='flex'; document.getElementById('pvNote').textContent = p.note; }
+  else { noteRow.style.display='none'; }
+  document.getElementById('voiceParsed').style.display = 'block';
+  const btns = document.getElementById('voiceBtns');
+  btns.style.display = 'flex';
+  document.getElementById('voiceRetry').style.display = 'block';
+  document.getElementById('voiceSave').disabled = !p.amount;
+}
+
+function saveVoiceTx(){
+  if(!parsedVoice || !parsedVoice.amount) return;
+  txs.push({
+    id: Date.now(),
+    type: parsedVoice.type,
+    category: parsedVoice.category,
+    amount: parsedVoice.amount,
+    note: parsedVoice.note || '',
+    date: parsedVoice.date
+  });
+  save(); render(); closeVoiceSheet();
+}
+// ── END VOICE ───────────────────────────────────────────
 
 load();
 </script>
