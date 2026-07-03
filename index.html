@@ -238,6 +238,53 @@ input:focus{outline:none;border-color:var(--teal);}
 .v-do{flex:2;padding:14px;border-radius:13px;border:none;background:var(--teal);color:#fff;font-size:15px;font-weight:700;}
 .v-do:disabled{opacity:.35;}
 .v-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.8;}
+
+/* ─── ACCOUNT DETAIL SCREEN ────────────────────────────── */
+#accDetail{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column;}
+#accDetail.on{display:flex;}
+.acc-detail-header{background:var(--teal);color:#fff;padding:calc(var(--safe-top) + 14px) 20px 22px;flex:none;}
+.acc-detail-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.back-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;}
+.acc-detail-title{font-size:18px;font-weight:700;flex:1;}
+.acc-detail-import{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;}
+.acc-detail-icon{width:50px;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px;}
+.acc-detail-name{font-size:22px;font-weight:700;margin-bottom:2px;}
+.acc-detail-type{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px;}
+.acc-detail-bal{font-size:38px;font-weight:700;letter-spacing:-1px;line-height:1;}
+.acc-detail-bal-cur{font-size:18px;font-weight:500;opacity:.6;margin-left:4px;}
+.acc-detail-stats{display:flex;gap:12px;margin-top:14px;}
+.acc-detail-stat{background:rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;flex:1;}
+.acc-detail-stat .l{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:3px;font-weight:500;}
+.acc-detail-stat .v{font-size:17px;font-weight:700;}
+.acc-detail-body{flex:1;overflow-y:auto;padding:16px 18px;}
+.acc-detail-footer{padding:10px 16px calc(var(--safe-bot)+10px);background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;}
+.acc-detail-add{flex:1;padding:14px;border-radius:13px;background:var(--teal);color:#fff;border:none;font-size:15px;font-weight:700;}
+.acc-detail-imp{flex:none;padding:14px 16px;border-radius:13px;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);font-size:15px;font-weight:600;}
+
+/* ─── IMPORT SHEET ──────────────────────────────────────── */
+.import-zone{border:2px dashed var(--line);border-radius:16px;padding:30px 20px;text-align:center;background:var(--surface);margin-bottom:14px;}
+.import-zone.drag{border-color:var(--teal);background:var(--teal-light);}
+.import-zone-ic{font-size:36px;margin-bottom:10px;}
+.import-zone-t{font-size:15px;font-weight:600;margin-bottom:5px;}
+.import-zone-s{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
+.import-file-btn{display:inline-block;padding:11px 22px;border-radius:11px;background:var(--teal);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+#importFileInput{display:none;}
+.import-preview{display:none;margin-bottom:14px;}
+.import-preview-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;}
+.import-table{width:100%;border-collapse:collapse;font-size:12px;}
+.import-table th{background:var(--bg);padding:8px 10px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--line);}
+.import-table td{padding:7px 10px;border-bottom:1px solid var(--line);color:var(--ink);}
+.import-table tr:last-child td{border:none;}
+.col-map{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;}
+.col-map-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--ink);}
+.col-map-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.col-map-row:last-child{margin-bottom:0;}
+.col-map-lbl{font-size:13px;font-weight:600;width:80px;flex:none;color:var(--muted);}
+.col-map-sel{flex:1;padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:14px;color:var(--ink);}
+.import-result{background:var(--income-soft);border:1px solid var(--income);border-radius:12px;padding:14px;margin-bottom:12px;display:none;}
+.import-result.err{background:var(--expense-soft);border-color:var(--expense);}
+.import-result-t{font-size:14px;font-weight:700;margin-bottom:4px;}
+.import-result-s{font-size:13px;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -443,6 +490,98 @@ input:focus{outline:none;border-color:var(--teal);}
   </div>
 </div>
 
+<!-- ACCOUNT DETAIL SCREEN -->
+<div id="accDetail">
+  <div class="acc-detail-header" id="accDetailHeader">
+    <div class="acc-detail-nav">
+      <button class="back-btn" onclick="closeAccDetail()">‹</button>
+      <span class="acc-detail-title" id="adTitle">Счёт</span>
+      <button class="acc-detail-import" onclick="openImport()">↑ Выписка</button>
+    </div>
+    <div class="acc-detail-icon" id="adIcon">💳</div>
+    <div class="acc-detail-name" id="adName">—</div>
+    <div class="acc-detail-type" id="adType">—</div>
+    <div class="acc-detail-bal"><span id="adBal">0</span><span class="acc-detail-bal-cur">сом</span></div>
+    <div class="acc-detail-stats">
+      <div class="acc-detail-stat"><div class="l">Доходы</div><div class="v" id="adInc">0</div></div>
+      <div class="acc-detail-stat"><div class="l">Расходы</div><div class="v" id="adExp">0</div></div>
+      <div class="acc-detail-stat"><div class="l">Операций</div><div class="v" id="adCount">0</div></div>
+    </div>
+  </div>
+  <div class="acc-detail-body" id="accDetailBody"></div>
+  <div class="acc-detail-footer">
+    <button class="acc-detail-imp" onclick="openImport()">↑ Загрузить выписку</button>
+    <button class="acc-detail-add" onclick="openSheetForAcc()">＋ Добавить</button>
+  </div>
+</div>
+
+<!-- IMPORT SHEET -->
+<div class="backdrop" id="importBd" onclick="if(event.target===this)closeImport()">
+  <div class="sheet" style="max-height:95vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2>Загрузить выписку</h2>
+      <button class="close-x" onclick="closeImport()">✕</button>
+    </div>
+
+    <div class="import-zone" id="importZone">
+      <div class="import-zone-ic">📄</div>
+      <div class="import-zone-t">Выбери файл выписки</div>
+      <div class="import-zone-s">Поддерживается CSV, XLS, XLSX, PDF<br>Экспортируй из приложения банка</div>
+      <label class="import-file-btn">
+        Выбрать файл
+        <input type="file" id="importFileInput" accept=".csv,.txt,.xls,.xlsx,.pdf" onchange="handleFile(this)">
+      </label>
+    </div>
+
+    <div class="import-result" id="importResult">
+      <div class="import-result-t" id="importResultT"></div>
+      <div class="import-result-s" id="importResultS"></div>
+    </div>
+
+    <div class="import-preview" id="importPreview">
+      <div class="import-preview-title">Предпросмотр (первые 3 строки)</div>
+      <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--line);">
+        <table class="import-table" id="importTable"></table>
+      </div>
+    </div>
+
+    <div class="col-map" id="colMap" style="display:none;">
+      <div class="col-map-title">Укажи какой столбец что означает</div>
+      <div class="col-map-row">
+        <span class="col-map-lbl">Дата</span>
+        <select class="col-map-sel" id="mapDate"></select>
+      </div>
+      <div class="col-map-row">
+        <span class="col-map-lbl">Сумма</span>
+        <select class="col-map-sel" id="mapAmount"></select>
+      </div>
+      <div class="col-map-row">
+        <span class="col-map-lbl">Описание</span>
+        <select class="col-map-sel" id="mapDesc"></select>
+      </div>
+      <div class="col-map-row">
+        <span class="col-map-lbl">Тип</span>
+        <select class="col-map-sel" id="mapType">
+          <option value="auto">Авто (по знаку суммы)</option>
+          <option value="col">Отдельный столбец</option>
+        </select>
+      </div>
+      <div class="col-map-row" id="mapTypeColRow" style="display:none;">
+        <span class="col-map-lbl">Столбец типа</span>
+        <select class="col-map-sel" id="mapTypeCol"></select>
+      </div>
+    </div>
+
+    <button class="save-btn" id="importBtn" style="display:none;" onclick="doImport()">Импортировать</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -555,20 +694,20 @@ window.selAcc=function(id){
 
 function renderAccCards(){
   const el=document.getElementById('accCards');
-  if(!accounts.length){el.innerHTML=`<div class="empty"><div class="empty-ic">🏦</div><div class="empty-t">Нет счетов</div><div>Добавь первый счёт</div></div>`;return;}
+  if(!accounts.length){el.innerHTML=`<div class="empty"><div class="empty-ic">🏦</div><div class="empty-t">Нет счетов</div><div>Добавь первый счёт ниже</div></div>`;return;}
   el.innerHTML=accounts.map(a=>{
     const atx=txs.filter(t=>t.accountId===a.id);
     const inc=atx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
     const exp=atx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
     const bal=inc-exp; const col=a.color||'#1F4D43';
-    return `<div class="acc-card">
+    return `<div class="acc-card" onclick="openAccDetail('${a.id}')" style="cursor:pointer;">
       <div class="acc-card-stripe" style="background:${col}"></div>
       <div class="acc-card-top">
         <div class="acc-card-icon" style="background:${col}20">${ACCOUNT_TYPES[a.type]?.ic||'💳'}</div>
-        <button class="acc-card-del" onclick="delAcc('${a.id}')">✕</button>
+        <button class="acc-card-del" onclick="event.stopPropagation();delAcc('${a.id}')">✕</button>
       </div>
       <div class="acc-card-name">${esc(a.name)}</div>
-      <div class="acc-card-type">${ACCOUNT_TYPES[a.type]?.label||''}</div>
+      <div class="acc-card-type">${ACCOUNT_TYPES[a.type]?.label||''} &nbsp;·&nbsp; <span style="color:var(--teal);font-weight:600;">Открыть →</span></div>
       <div class="acc-card-bal ${bal>=0?'pos':'neg'}" style="margin-top:10px">${bal>=0?'+':'−'}${fmt(Math.abs(bal))} <span style="font-size:16px;font-weight:500;opacity:.6">сом</span></div>
       <div class="acc-stats" style="margin-top:6px">
         <div class="acc-stat"><div class="acc-stat-l">Доходы</div><div class="acc-stat-v pos">+${fmt(inc)}</div></div>
@@ -577,6 +716,346 @@ function renderAccCards(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ── ACCOUNT DETAIL ───────────────────────────────────────
+let detailAccId=null;
+
+window.openAccDetail=function(id){
+  detailAccId=id;
+  const a=accounts.find(x=>x.id===id);
+  if(!a) return;
+  const col=a.color||'#1F4D43';
+  const atx=txs.filter(t=>t.accountId===id);
+  const inc=atx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp=atx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const bal=inc-exp;
+  document.getElementById('accDetailHeader').style.background=col;
+  document.getElementById('adTitle').textContent=a.name;
+  document.getElementById('adIcon').textContent=ACCOUNT_TYPES[a.type]?.ic||'💳';
+  document.getElementById('adIcon').style.background=col+'30';
+  document.getElementById('adName').textContent=a.name;
+  document.getElementById('adType').textContent=ACCOUNT_TYPES[a.type]?.label||'';
+  document.getElementById('adBal').textContent=(bal>=0?'+':'−')+fmt(Math.abs(bal));
+  document.getElementById('adInc').textContent='+'+fmt(inc);
+  document.getElementById('adExp').textContent='−'+fmt(exp);
+  document.getElementById('adCount').textContent=atx.length;
+  renderDetailList(atx);
+  document.getElementById('accDetail').classList.add('on');
+};
+
+window.closeAccDetail=()=>{ document.getElementById('accDetail').classList.remove('on'); detailAccId=null; };
+
+function renderDetailList(atx){
+  const el=document.getElementById('accDetailBody');
+  if(!atx.length){el.innerHTML=`<div class="empty"><div class="empty-ic">📭</div><div class="empty-t">Нет операций</div><div>Добавь или загрузи выписку</div></div>`;return;}
+  const sorted=[...atx].sort((a,b)=>b.date.localeCompare(a.date));
+  const grp={}; sorted.forEach(t=>(grp[t.date]=grp[t.date]||[]).push(t));
+  el.innerHTML='';
+  Object.keys(grp).sort((a,b)=>b.localeCompare(a)).forEach(d=>{
+    const g=document.createElement('div');
+    g.innerHTML=`<div class="day-lbl">${fmtDate(d)}</div>`;
+    grp[d].forEach(t=>{
+      const div=document.createElement('div'); div.className='tx';
+      div.innerHTML=`
+        <div class="tx-icon ${t.type==='income'?'in':'out'}">${t.type==='income'?'↓':'↑'}</div>
+        <div class="tx-info">
+          <div class="tx-cat">${esc(t.category)}</div>
+          ${t.note?`<div class="tx-meta">${esc(t.note)}</div>`:''}
+        </div>
+        <div class="tx-right">
+          <div class="tx-amt ${t.type==='income'?'in':'out'}">${t.type==='income'?'+':'−'}${fmt(t.amount)}</div>
+          <button class="tx-del" data-id="${t.id}">✕</button>
+        </div>`;
+      g.appendChild(div);
+    });
+    el.appendChild(g);
+  });
+  el.querySelectorAll('.tx-del').forEach(b=>b.onclick=async()=>{
+    await deleteDoc(doc(db,'users',uid,'transactions',b.dataset.id));
+    if(detailAccId) openAccDetail(detailAccId);
+  });
+}
+
+window.openSheetForAcc=function(){
+  if(detailAccId){ curAccId=detailAccId; }
+  openSheet();
+};
+
+// ── IMPORT ───────────────────────────────────────────────
+let csvRows=[], csvHeaders=[];
+
+window.openImport=function(){
+  csvRows=[]; csvHeaders=[];
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('colMap').style.display='none';
+  document.getElementById('importBtn').style.display='none';
+  document.getElementById('importResult').style.display='none';
+  document.getElementById('importFileInput').value='';
+  document.getElementById('importBd').classList.add('on');
+};
+window.closeImport=()=>document.getElementById('importBd').classList.remove('on');
+
+window.handleFile=function(inp){
+  const file=inp.files[0]; if(!file) return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  setImportStatus('⏳ Читаю файл...');
+  if(ext==='pdf'){
+    const reader=new FileReader();
+    reader.onload=e=>parsePDF(e.target.result);
+    reader.readAsArrayBuffer(file);
+  } else if(ext==='xls'||ext==='xlsx'){
+    const reader=new FileReader();
+    reader.onload=e=>parseXLS(e.target.result);
+    reader.readAsArrayBuffer(file);
+  } else {
+    const reader=new FileReader();
+    reader.onload=e=>parseCSV(e.target.result);
+    reader.readAsText(file,'utf-8');
+  }
+};
+
+function setImportStatus(msg){
+  const el=document.getElementById('importResult');
+  el.className='import-result'; el.style.display='block';
+  document.getElementById('importResultT').textContent=msg;
+  document.getElementById('importResultS').textContent='';
+}
+
+// ── XLS / XLSX PARSER ────────────────────────────────────
+function parseXLS(arrayBuffer){
+  try{
+    const wb=XLSX.read(arrayBuffer,{type:'array',cellDates:true});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    if(!json.length){showImportErr('Файл пустой');return;}
+
+    // Find header row (first non-empty row)
+    let headerIdx=0;
+    for(let i=0;i<Math.min(10,json.length);i++){
+      if(json[i].some(c=>c!=='')){headerIdx=i;break;}
+    }
+    csvHeaders=json[headerIdx].map(h=>String(h).trim());
+    csvRows=json.slice(headerIdx+1)
+      .filter(r=>r.some(c=>c!==''))
+      .map(r=>r.map(c=>{
+        // Format dates from XLSX date objects
+        if(c instanceof Date) return c.toLocaleDateString('ru-RU');
+        return String(c).trim();
+      }));
+
+    if(!csvRows.length){showImportErr('Нет данных в таблице');return;}
+    showPreviewAndMap();
+  }catch(e){
+    showImportErr('Ошибка чтения XLS: '+e.message);
+  }
+}
+
+// ── PDF PARSER ───────────────────────────────────────────
+async function parsePDF(arrayBuffer){
+  try{
+    if(!window.pdfjsLib){showImportErr('PDF.js не загрузился. Проверь интернет.');return;}
+    const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+    const allTextItems=[];
+
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const tc=await page.getTextContent();
+      // Group by Y position to reconstruct rows
+      const byY={};
+      tc.items.forEach(item=>{
+        const y=Math.round(item.transform[5]/3)*3;
+        if(!byY[y]) byY[y]=[];
+        byY[y].push({text:item.str.trim(),x:item.transform[4]});
+      });
+      // Sort Y descending (PDF coords: bottom=0), then X ascending
+      Object.keys(byY).sort((a,b)=>b-a).forEach(y=>{
+        const row=byY[y].sort((a,b)=>a.x-b.x).map(i=>i.text).filter(t=>t);
+        if(row.join('').trim()) allTextItems.push(row);
+      });
+    }
+
+    if(!allTextItems.length){showImportErr('Текст в PDF не найден (возможно, это скан)');return;}
+
+    // Find header row — look for rows with date/amount/description keywords
+    const hdKeywords=['дата','date','сумма','amount','описание','назначение','операция','приход','расход','деб','кред'];
+    let headerIdx=allTextItems.findIndex(row=>
+      row.filter(c=>hdKeywords.some(k=>c.toLowerCase().includes(k))).length>=2
+    );
+
+    if(headerIdx>=0){
+      // Table found
+      csvHeaders=allTextItems[headerIdx];
+      csvRows=allTextItems.slice(headerIdx+1).filter(r=>r.length>=2);
+    } else {
+      // No clear header — try to parse by regex patterns
+      const txRows=[];
+      const dateRx=/\d{2}[.\/-]\d{2}[.\/-]\d{2,4}/;
+      const amtRx=/[-+]?\d[\d\s]*[.,]\d{2}/;
+
+      allTextItems.forEach(row=>{
+        const line=row.join(' ');
+        const dateM=line.match(dateRx);
+        const amtM=line.match(amtRx);
+        if(dateM&&amtM){
+          const desc=line.replace(dateM[0],'').replace(amtM[0],'').trim();
+          txRows.push([dateM[0], amtM[0], desc]);
+        }
+      });
+
+      if(!txRows.length){showImportErr('Не удалось распознать таблицу в PDF.\nПопробуй экспортировать в CSV или XLSX.');return;}
+      csvHeaders=['Дата','Сумма','Описание'];
+      csvRows=txRows;
+    }
+
+    // Pad rows to header length
+    csvRows=csvRows.map(r=>{
+      while(r.length<csvHeaders.length) r.push('');
+      return r.slice(0,Math.max(csvHeaders.length,r.length));
+    });
+
+    showPreviewAndMap();
+  }catch(e){
+    showImportErr('Ошибка чтения PDF: '+e.message);
+  }
+}
+
+function showPreviewAndMap(){
+  document.getElementById('importResult').style.display='none';
+  const previewRows=csvRows.slice(0,3);
+  document.getElementById('importTable').innerHTML=
+    `<tr>${csvHeaders.map(h=>`<th>${esc(String(h).slice(0,20))}</th>`).join('')}</tr>`+
+    previewRows.map(r=>`<tr>${csvHeaders.map((_,i)=>`<td>${esc(String(r[i]||'').slice(0,25))}</td>`).join('')}</tr>`).join('');
+  document.getElementById('importPreview').style.display='block';
+
+  const opts=csvHeaders.map((h,i)=>`<option value="${i}">${h||'Столбец '+(i+1)}</option>`).join('');
+  ['mapDate','mapAmount','mapDesc','mapTypeCol'].forEach(id=>document.getElementById(id).innerHTML=opts);
+
+  autoSelectCol('mapDate',  ['дата','date','время','датапроводки','датаоперации','дата операции']);
+  autoSelectCol('mapAmount',['сумма','amount','sum','деньги','приход','расход','credit','debit','summa','обороты']);
+  autoSelectCol('mapDesc',  ['описание','назначение','description','desc','комментарий','примечание','операция','наименование']);
+
+  document.getElementById('colMap').style.display='block';
+  document.getElementById('mapType').onchange=function(){document.getElementById('mapTypeColRow').style.display=this.value==='col'?'flex':'none';};
+  document.getElementById('importBtn').textContent='Импортировать ('+csvRows.length+' строк)';
+  document.getElementById('importBtn').style.display='block';
+}
+
+function parseCSV(text){
+  const firstLine=text.split('\n')[0];
+  const delim=[';',',','\t','|'].find(d=>(firstLine.match(new RegExp('\\'+d,'g'))||[]).length>0)||',';
+  const lines=text.trim().split('\n').filter(l=>l.trim());
+  if(lines.length<2){showImportErr('Файл пустой или содержит только заголовок');return;}
+  csvHeaders=splitCSVLine(lines[0],delim).map(h=>h.replace(/['"]/g,'').trim());
+  csvRows=lines.slice(1).map(l=>splitCSVLine(l,delim).map(v=>v.replace(/['"]/g,'').trim()));
+  if(!csvHeaders.length||!csvRows.length){showImportErr('Не удалось прочитать файл');return;}
+  showPreviewAndMap();
+}
+
+function splitCSVLine(line,delim){
+  const res=[]; let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===delim&&!inQ){res.push(cur);cur='';}
+    else cur+=c;
+  }
+  res.push(cur); return res;
+}
+
+function autoSelectCol(id,keywords){
+  const sel=document.getElementById(id);
+  const idx=csvHeaders.findIndex(h=>keywords.some(k=>h.toLowerCase().replace(/\s/g,'').includes(k)));
+  if(idx>=0) sel.value=idx;
+}
+
+function showImportErr(msg){
+  const el=document.getElementById('importResult');
+  el.className='import-result err'; el.style.display='block';
+  document.getElementById('importResultT').textContent='❌ Ошибка';
+  document.getElementById('importResultS').textContent=msg;
+}
+
+window.doImport=async function(){
+  const btn=document.getElementById('importBtn');
+  btn.disabled=true; btn.textContent='Импортирую...';
+
+  const dI=+document.getElementById('mapDate').value;
+  const aI=+document.getElementById('mapAmount').value;
+  const nI=+document.getElementById('mapDesc').value;
+  const typeMode=document.getElementById('mapType').value;
+  const tI=+document.getElementById('mapTypeCol').value;
+  const targetAccId=detailAccId||(accounts[0]?.id)||null;
+
+  let ok=0,skip=0;
+  const batch=[];
+
+  for(const row of csvRows){
+    try{
+      const rawDate=row[dI]||''; const rawAmt=row[aI]||''; const rawNote=row[nI]||'';
+      // Parse date
+      const date=parseDate(rawDate); if(!date){skip++;continue;}
+      // Parse amount
+      const cleanAmt=rawAmt.replace(/[^\d.,-]/g,'').replace(',','.');
+      const amount=parseFloat(cleanAmt); if(isNaN(amount)||amount===0){skip++;continue;}
+      // Determine type
+      let type;
+      if(typeMode==='col'){
+        const tv=(row[tI]||'').toLowerCase();
+        type=tv.includes('прих')||tv.includes('зачисл')||tv.includes('credit')||tv.includes('+')?'income':'expense';
+      } else {
+        type=amount>=0?'income':'expense';
+      }
+      // Category from description
+      const category=autoCategory(type, rawNote);
+      batch.push({type,amount:Math.abs(amount),category,note:rawNote.slice(0,100),date,accountId:targetAccId,createdAt:Date.now()});
+      ok++;
+    }catch(e){skip++;}
+  }
+
+  // Save to Firestore
+  for(const tx of batch){
+    await addDoc(collection(db,'users',uid,'transactions'),tx);
+  }
+
+  btn.disabled=false; btn.textContent='Импортировать';
+  const el=document.getElementById('importResult');
+  el.className='import-result'; el.style.display='block';
+  document.getElementById('importResultT').textContent=`✅ Импортировано: ${ok} операций`;
+  document.getElementById('importResultS').textContent=skip?`Пропущено строк: ${skip} (неверный формат)`:'Все строки обработаны успешно!';
+  document.getElementById('importBtn').style.display='none';
+  if(detailAccId) setTimeout(()=>openAccDetail(detailAccId),300);
+};
+
+function parseDate(raw){
+  if(!raw) return null;
+  // Try various formats: DD.MM.YYYY, YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY
+  let m;
+  m=raw.match(/^(\d{2})\.(\d{2})\.(\d{4})/); if(m) return `${m[3]}-${m[2]}-${m[1]}`;
+  m=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m=raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/); if(m) return `${m[3]}-${m[2]}-${m[1]}`;
+  m=raw.match(/^(\d{4})\/(\d{2})\/(\d{2})/); if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m=raw.match(/^(\d{2})\.(\d{2})\.(\d{2})$/); if(m) return `20${m[3]}-${m[2]}-${m[1]}`;
+  // Try JS Date
+  const d=new Date(raw); if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+  return null;
+}
+
+function autoCategory(type,desc){
+  const t=desc.toLowerCase();
+  if(type==='income'){
+    if(/зарплат|оклад/.test(t)) return 'Зарплата';
+    if(/подработ|фриланс/.test(t)) return 'Подработка';
+    if(/дивиденд|инвестиц/.test(t)) return 'Инвестиции';
+    return 'Другое';
+  }
+  if(/еда|продукт|магазин|ресторан|кафе|фаст|пицц|суши|доставк/.test(t)) return 'Еда';
+  if(/такси|uber|яндекс|автобус|бензин|заправк|парковк|транспорт/.test(t)) return 'Транспорт';
+  if(/аренд|квартир|коммунал|электр|интернет|жкх|ипотек/.test(t)) return 'Жильё';
+  if(/кино|театр|концерт|клуб|игр|подписк|netflix|spotify/.test(t)) return 'Развлечения';
+  if(/аптек|лекарств|врач|больниц|клиник|стоматолог/.test(t)) return 'Здоровье';
+  if(/одежд|обувь|телефон|техник|электроник|мебель/.test(t)) return 'Покупки';
+  return 'Другое';
 }
 
 window.delAcc=async id=>{ if(confirm('Удалить счёт?')) await deleteDoc(doc(db,'users',uid,'accounts',id)); };
