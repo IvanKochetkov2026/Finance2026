@@ -282,7 +282,6 @@ input[type=text],input[type=number],input[type=date]{width:100%;padding:13px 14p
       <div class="auth-err" id="rErr"></div>
     </div>
   </div>
-  <button class="auth-cfg" onclick="showSetup()">⚙️ Настройки Firebase</button>
 </div>
 
 <!-- APP -->
@@ -422,12 +421,16 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // ── CONFIG ──────────────────────────────────────────────
-const CFG_KEY = 'koshelek_firebase_cfg';
-let app, auth, db, uid, unsubscribe;
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBFjJGCGFh33-YlowEODhnAC1SS9xNvOEk",
+  authDomain: "finance-tracker-30aea.firebaseapp.com",
+  projectId: "finance-tracker-30aea",
+  storageBucket: "finance-tracker-30aea.firebasestorage.app",
+  messagingSenderId: "736212855852",
+  appId: "1:736212855852:web:2fc9283b8ee4a379523589"
+};
 
-function getConfig(){
-  try{ return JSON.parse(localStorage.getItem(CFG_KEY)); }catch(e){ return null; }
-}
+let app, auth, db, uid, unsubscribe;
 
 function initFirebase(cfg){
   try{
@@ -438,61 +441,30 @@ function initFirebase(cfg){
   }catch(e){ console.error(e); return false; }
 }
 
-// ── SETUP ───────────────────────────────────────────────
-window.saveSetup = function(){
-  const cfg = {
-    apiKey:            document.getElementById('cfgApiKey').value.trim(),
-    authDomain:        document.getElementById('cfgAuthDomain').value.trim(),
-    projectId:         document.getElementById('cfgProjectId').value.trim(),
-    storageBucket:     document.getElementById('cfgStorageBucket').value.trim(),
-    messagingSenderId: document.getElementById('cfgMsgSenderId').value.trim(),
-    appId:             document.getElementById('cfgAppId').value.trim(),
-  };
-  const err = document.getElementById('setupErr');
-  if(Object.values(cfg).some(v=>!v)){ err.style.display='block'; return; }
-  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-  err.style.display='none';
-  location.reload();
-};
-
-window.showSetup = function(){
-  document.getElementById('setupScreen').classList.add('show');
-  const cfg = getConfig()||{};
-  ['ApiKey','AuthDomain','ProjectId','StorageBucket','MsgSenderId','AppId'].forEach(k=>{
-    const key = k[0].toLowerCase()+k.slice(1).replace(/([A-Z])/g,m=>m.toLowerCase());
-    document.getElementById('cfg'+k).value = cfg[key]||'';
-  });
-};
-
 // ── BOOT ────────────────────────────────────────────────
-const cfg = getConfig();
 const loading = document.getElementById('loadingScreen');
+document.getElementById('setupScreen').style.display='none';
 
-if(!cfg){
+const ok = initFirebase(FIREBASE_CONFIG);
+if(!ok){
   loading.style.display='none';
-  document.getElementById('setupScreen').classList.add('show');
+  alert('Ошибка подключения к Firebase');
 } else {
-  const ok = initFirebase(cfg);
-  if(!ok){
+  onAuthStateChanged(auth, user=>{
     loading.style.display='none';
-    document.getElementById('setupScreen').classList.add('show');
-  } else {
-    onAuthStateChanged(auth, user=>{
-      loading.style.display='none';
-      if(user){
-        uid = user.uid;
-        document.getElementById('userName').textContent = '👤 '+(user.displayName||user.email.split('@')[0]);
-        document.getElementById('authScreen').classList.remove('show');
-        document.getElementById('app').style.display='block';
-        subscribeTransactions();
-      } else {
-        uid = null;
-        if(unsubscribe){ unsubscribe(); unsubscribe=null; }
-        document.getElementById('app').style.display='none';
-        document.getElementById('authScreen').classList.add('show');
-      }
-    });
-  }
+    if(user){
+      uid = user.uid;
+      document.getElementById('userName').textContent = '👤 '+(user.displayName||user.email.split('@')[0]);
+      document.getElementById('authScreen').classList.remove('show');
+      document.getElementById('app').style.display='block';
+      subscribeTransactions();
+    } else {
+      uid = null;
+      if(unsubscribe){ unsubscribe(); unsubscribe=null; }
+      document.getElementById('app').style.display='none';
+      document.getElementById('authScreen').classList.add('show');
+    }
+  });
 }
 
 // ── AUTH ─────────────────────────────────────────────────
