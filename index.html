@@ -546,29 +546,54 @@ input:focus{outline:none;border-color:var(--teal);}
     </div>
 
     <div class="col-map" id="colMap" style="display:none;">
-      <div class="col-map-title">Укажи какой столбец что означает</div>
+      <div class="col-map-title">Настройка столбцов</div>
+
       <div class="col-map-row">
         <span class="col-map-lbl">Дата</span>
         <select class="col-map-sel" id="mapDate"></select>
       </div>
       <div class="col-map-row">
-        <span class="col-map-lbl">Сумма</span>
-        <select class="col-map-sel" id="mapAmount"></select>
-      </div>
-      <div class="col-map-row">
         <span class="col-map-lbl">Описание</span>
         <select class="col-map-sel" id="mapDesc"></select>
       </div>
+
       <div class="col-map-row">
-        <span class="col-map-lbl">Тип</span>
-        <select class="col-map-sel" id="mapType">
-          <option value="auto">Авто (по знаку суммы)</option>
-          <option value="col">Отдельный столбец</option>
+        <span class="col-map-lbl">Режим сумм</span>
+        <select class="col-map-sel" id="mapMode">
+          <option value="sign">Одна колонка (+ доход / − расход)</option>
+          <option value="debitcredit">Дебет и Кредит — отдельные колонки</option>
+          <option value="typecol">Колонка с типом операции</option>
         </select>
       </div>
-      <div class="col-map-row" id="mapTypeColRow" style="display:none;">
-        <span class="col-map-lbl">Столбец типа</span>
+
+      <!-- Режим: одна колонка суммы -->
+      <div class="col-map-row" id="rowSign">
+        <span class="col-map-lbl">Сумма</span>
+        <select class="col-map-sel" id="mapAmount"></select>
+      </div>
+
+      <!-- Режим: Дебет / Кредит -->
+      <div class="col-map-row" id="rowDebit" style="display:none;">
+        <span class="col-map-lbl">Дебет (расход)</span>
+        <select class="col-map-sel" id="mapDebit"></select>
+      </div>
+      <div class="col-map-row" id="rowCredit" style="display:none;">
+        <span class="col-map-lbl">Кредит (доход)</span>
+        <select class="col-map-sel" id="mapCredit"></select>
+      </div>
+
+      <!-- Режим: столбец с типом -->
+      <div class="col-map-row" id="rowTypeAmt" style="display:none;">
+        <span class="col-map-lbl">Сумма</span>
+        <select class="col-map-sel" id="mapAmountT"></select>
+      </div>
+      <div class="col-map-row" id="rowTypeCol" style="display:none;">
+        <span class="col-map-lbl">Тип операции</span>
         <select class="col-map-sel" id="mapTypeCol"></select>
+      </div>
+
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;padding:0 2px;">
+        💡 Дебет = деньги ушли (расход) · Кредит = деньги пришли (доход)
       </div>
     </div>
 
@@ -1086,55 +1111,134 @@ async function parsePDF(arrayBuffer){
 
 function showPreviewAndMap(){
   document.getElementById('importResult').style.display='none';
+
+  // Preview table
   document.getElementById('importTable').innerHTML=
-    `<tr>${csvHeaders.map(h=>`<th>${esc(String(h).slice(0,20))}</th>`).join('')}</tr>`+
-    csvRows.slice(0,3).map(r=>`<tr>${csvHeaders.map((_,i)=>`<td>${esc(String(r[i]||'').slice(0,25))}</td>`).join('')}</tr>`).join('');
+    `<tr>${csvHeaders.map(h=>`<th>${esc(String(h).slice(0,18))}</th>`).join('')}</tr>`+
+    csvRows.slice(0,3).map(r=>`<tr>${csvHeaders.map((_,i)=>`<td>${esc(String(r[i]||'').slice(0,22))}</td>`).join('')}</tr>`).join('');
   document.getElementById('importPreview').style.display='block';
+
+  // Fill all selects with column options
   const opts=csvHeaders.map((h,i)=>`<option value="${i}">${h||'Столбец '+(i+1)}</option>`).join('');
-  ['mapDate','mapAmount','mapDesc','mapTypeCol'].forEach(id=>document.getElementById(id).innerHTML=opts);
-  autoSelectCol('mapDate',['дата','date','время','датапроводки','датаоперации']);
-  autoSelectCol('mapAmount',['сумма','amount','sum','приход','расход','credit','debit','summa']);
-  autoSelectCol('mapDesc',['описание','назначение','description','комментарий','примечание','операция','наименование']);
+  ['mapDate','mapDesc','mapAmount','mapDebit','mapCredit','mapAmountT','mapTypeCol'].forEach(id=>{
+    document.getElementById(id).innerHTML=opts;
+  });
+
+  // Auto-detect columns
+  autoSelectCol('mapDate',  ['дата','date','время','датапроводки','датаоперации','дата операции','transaction date']);
+  autoSelectCol('mapDesc',  ['описание','назначение','description','комментарий','примечание','операция','наименование','details','memo','reference']);
+  autoSelectCol('mapAmount',['сумма','amount','sum','summa','итого','total']);
+  autoSelectCol('mapAmountT',['сумма','amount','sum','summa','итого','total']);
+
+  // Detect debit/credit columns
+  const debitIdx  = csvHeaders.findIndex(h=>/(дебет|debit|расход|списан|withdraw)/i.test(h));
+  const creditIdx = csvHeaders.findIndex(h=>/(кредит|credit|приход|зачисл|deposit|поступ)/i.test(h));
+  const typeIdx   = csvHeaders.findIndex(h=>/(тип|type|вид|операц|direction)/i.test(h));
+
+  // Auto-select mode
+  const modeEl = document.getElementById('mapMode');
+  if(debitIdx>=0 && creditIdx>=0){
+    modeEl.value='debitcredit';
+    document.getElementById('mapDebit').value=debitIdx;
+    document.getElementById('mapCredit').value=creditIdx;
+  } else if(typeIdx>=0){
+    modeEl.value='typecol';
+    document.getElementById('mapTypeCol').value=typeIdx;
+  } else {
+    modeEl.value='sign';
+  }
+
+  updateModeUI();
+  modeEl.onchange = updateModeUI;
+
   document.getElementById('colMap').style.display='block';
-  document.getElementById('mapType').onchange=function(){document.getElementById('mapTypeColRow').style.display=this.value==='col'?'flex':'none';};
   document.getElementById('importBtn').textContent='Импортировать ('+csvRows.length+' строк)';
   document.getElementById('importBtn').style.display='block';
 }
 
+function updateModeUI(){
+  const mode=document.getElementById('mapMode').value;
+  document.getElementById('rowSign').style.display    = mode==='sign'        ? 'flex':'none';
+  document.getElementById('rowDebit').style.display   = mode==='debitcredit' ? 'flex':'none';
+  document.getElementById('rowCredit').style.display  = mode==='debitcredit' ? 'flex':'none';
+  document.getElementById('rowTypeAmt').style.display = mode==='typecol'     ? 'flex':'none';
+  document.getElementById('rowTypeCol').style.display = mode==='typecol'     ? 'flex':'none';
+}
+
 async function doImport(){
   const btn=document.getElementById('importBtn');
-  btn.disabled=true;btn.textContent='Импортирую...';
-  const dI=+document.getElementById('mapDate').value;
-  const aI=+document.getElementById('mapAmount').value;
-  const nI=+document.getElementById('mapDesc').value;
-  const typeMode=document.getElementById('mapType').value;
-  const tI=+document.getElementById('mapTypeCol').value;
-  const targetAccId=detailAccId||(accounts[0]?.id)||null;
-  let ok=0,skip=0;
+  btn.disabled=true; btn.textContent='Импортирую...';
+
+  const dI    = +document.getElementById('mapDate').value;
+  const nI    = +document.getElementById('mapDesc').value;
+  const mode  = document.getElementById('mapMode').value;
+  const targetAccId = detailAccId||(accounts[0]?.id)||null;
+
+  // Column indices by mode
+  const aI    = +document.getElementById('mapAmount').value;   // sign mode
+  const dbI   = +document.getElementById('mapDebit').value;    // debitcredit: дебет = расход
+  const crI   = +document.getElementById('mapCredit').value;   // debitcredit: кредит = доход
+  const atI   = +document.getElementById('mapAmountT').value;  // typecol: сумма
+  const tI    = +document.getElementById('mapTypeCol').value;  // typecol: тип
+
+  let ok=0, skip=0;
   const batch=db.batch();
+
   for(const row of csvRows){
     try{
-      const date=parseDate(row[dI]||'');if(!date){skip++;continue;}
-      const cleanAmt=String(row[aI]||'').replace(/[^\d.,-]/g,'').replace(',','.');
-      const amount=parseFloat(cleanAmt);if(isNaN(amount)||amount===0){skip++;continue;}
-      let type;
-      if(typeMode==='col'){const tv=(row[tI]||'').toLowerCase();type=tv.includes('прих')||tv.includes('зачисл')||tv.includes('credit')||tv.includes('+')?'income':'expense';}
-      else{type=amount>=0?'income':'expense';}
-      const note=String(row[nI]||'').slice(0,100);
+      const date=parseDate(row[dI]||'');
+      if(!date){ skip++; continue; }
+
+      const note=String(row[nI]||'').slice(0,120);
+      let amount=0, type='expense';
+
+      if(mode==='sign'){
+        // Одна колонка: положительная = доход, отрицательная = расход
+        const raw=String(row[aI]||'').replace(/\s/g,'').replace(',','.').replace(/[^\d.\-+]/g,'');
+        amount=parseFloat(raw);
+        if(isNaN(amount)||amount===0){ skip++; continue; }
+        type=amount>0?'income':'expense';
+        amount=Math.abs(amount);
+
+      } else if(mode==='debitcredit'){
+        // Дебет = деньги ушли (расход), Кредит = деньги пришли (доход)
+        const rawDb=String(row[dbI]||'').replace(/\s/g,'').replace(',','.').replace(/[^\d.]/g,'');
+        const rawCr=String(row[crI]||'').replace(/\s/g,'').replace(',','.').replace(/[^\d.]/g,'');
+        const amtDb=parseFloat(rawDb)||0;
+        const amtCr=parseFloat(rawCr)||0;
+        if(amtDb===0&&amtCr===0){ skip++; continue; }
+        if(amtDb>0){ type='expense'; amount=amtDb; }
+        else       { type='income';  amount=amtCr; }
+
+      } else if(mode==='typecol'){
+        // Тип в отдельной колонке: Дебет/Кредит/Приход/Расход
+        const raw=String(row[atI]||'').replace(/\s/g,'').replace(',','.').replace(/[^\d.]/g,'');
+        amount=parseFloat(raw)||0;
+        if(amount===0){ skip++; continue; }
+        const tv=(row[tI]||'').toLowerCase();
+        // Дебет = расход, Кредит = доход
+        const isCredit = /кредит|credit|приход|зачисл|поступ|deposit|\+/.test(tv);
+        const isDebit  = /дебет|debit|расход|списан|withdraw|\-/.test(tv);
+        if(isCredit)       type='income';
+        else if(isDebit)   type='expense';
+        else               type=amount>0?'income':'expense'; // fallback
+      }
+
       const category=autoCategory(type,note);
       const ref=db.collection('users').doc(uid).collection('transactions').doc();
-      batch.set(ref,{type,amount:Math.abs(amount),category,note,date,accountId:targetAccId,createdAt:Date.now()});
+      batch.set(ref,{type,amount,category,note,date,accountId:targetAccId,createdAt:Date.now()});
       ok++;
-    }catch(e){skip++;}
+    }catch(e){ skip++; }
   }
+
   await batch.commit();
   btn.disabled=false;
   const el=document.getElementById('importResult');
-  el.className='import-result';el.style.display='block';
+  el.className='import-result'; el.style.display='block';
   document.getElementById('importResultT').textContent=`✅ Импортировано: ${ok} операций`;
-  document.getElementById('importResultS').textContent=skip?`Пропущено: ${skip} строк`:'Все строки обработаны!';
+  document.getElementById('importResultS').textContent=skip?`Пропущено строк: ${skip}`:'Все строки обработаны!';
   document.getElementById('importBtn').style.display='none';
-  if(detailAccId)setTimeout(()=>openAccDetail(detailAccId),400);
+  if(detailAccId) setTimeout(()=>openAccDetail(detailAccId),400);
 }
 
 function parseDate(raw){
