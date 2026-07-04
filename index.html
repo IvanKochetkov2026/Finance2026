@@ -164,7 +164,7 @@ button{cursor:pointer;}
 .donut-vl{font-size:12px;color:var(--muted);flex:none;}
 
 /* ─── BOTTOM BAR ───────────────────────────────────────── */
-.bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px calc(var(--safe-bot) + 10px);background:var(--surface);border-top:1px solid var(--line);z-index:40;display:flex;flex-direction:column;gap:8px;box-shadow:0 -4px 20px rgba(0,0,0,.07);}
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px calc(var(--safe-bot) + 10px);background:var(--surface);border-top:1px solid var(--line);z-index:30;display:flex;flex-direction:column;gap:8px;box-shadow:0 -4px 20px rgba(0,0,0,.07);}
 .bb-btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:.01em;}
 .bb-add{background:var(--teal);color:#fff;box-shadow:0 4px 14px rgba(31,77,67,.25);}
 .bb-mic{background:var(--bg);color:var(--ink);border:1.5px solid var(--line);}
@@ -240,7 +240,7 @@ input:focus{outline:none;border-color:var(--teal);}
 .v-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.8;}
 
 /* ─── ACCOUNT DETAIL SCREEN ────────────────────────────── */
-#accDetail{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column;}
+#accDetail{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column;overscroll-behavior:contain;}
 #accDetail.on{display:flex;}
 .acc-detail-header{background:var(--teal);color:#fff;padding:calc(var(--safe-top) + 14px) 20px 22px;flex:none;}
 .acc-detail-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
@@ -256,10 +256,10 @@ input:focus{outline:none;border-color:var(--teal);}
 .acc-detail-stat{background:rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;flex:1;}
 .acc-detail-stat .l{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:3px;font-weight:500;}
 .acc-detail-stat .v{font-size:17px;font-weight:700;}
-.acc-detail-body{flex:1;overflow-y:auto;padding:16px 18px;}
-.acc-detail-footer{padding:10px 16px calc(var(--safe-bot)+10px);background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;}
-.acc-detail-add{flex:1;padding:14px;border-radius:13px;background:var(--teal);color:#fff;border:none;font-size:15px;font-weight:700;}
-.acc-detail-imp{flex:none;padding:14px 16px;border-radius:13px;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);font-size:15px;font-weight:600;}
+.acc-detail-body{flex:1;overflow-y:auto;padding:16px 18px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.acc-detail-footer{padding:10px 16px calc(var(--safe-bot)+10px);background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;position:relative;z-index:61;flex:none;}
+.acc-detail-add{flex:1;padding:14px;border-radius:13px;background:var(--teal);color:#fff;border:none;font-size:15px;font-weight:700;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0);}
+.acc-detail-imp{flex:none;padding:14px 16px;border-radius:13px;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);font-size:15px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0);}
 
 /* ─── IMPORT SHEET ──────────────────────────────────────── */
 .import-zone{border:2px dashed var(--line);border-radius:16px;padding:30px 20px;text-align:center;background:var(--surface);margin-bottom:14px;}
@@ -510,8 +510,8 @@ input:focus{outline:none;border-color:var(--teal);}
   </div>
   <div class="acc-detail-body" id="accDetailBody"></div>
   <div class="acc-detail-footer">
-    <button class="acc-detail-imp" onclick="openImport()">↑ Загрузить выписку</button>
-    <button class="acc-detail-add" onclick="openSheetForAcc()">＋ Добавить</button>
+    <button class="acc-detail-imp" id="btnImport">↑ Загрузить выписку</button>
+    <button class="acc-detail-add" id="btnAccAdd">＋ Добавить</button>
   </div>
 </div>
 
@@ -629,6 +629,12 @@ function getCats(type){const c=loadCustom();return[...DEFAULT_CATS[type],...(c[t
 function addCustomCatName(type,name){const c=loadCustom();if(!c[type])c[type]=[];if(!c[type].includes(name))c[type].push(name);saveCustom(c);}
 
 // ── BOOT ─────────────────────────────────────────────────
+// Wire account detail buttons via JS (more reliable than onclick on iOS)
+document.getElementById('btnImport').addEventListener('click', function(e){ e.stopPropagation(); openImport(); });
+document.getElementById('btnAccAdd').addEventListener('click', function(e){ e.stopPropagation(); openSheetForAcc(); });
+document.querySelector('#accDetail .back-btn').addEventListener('click', function(e){ e.stopPropagation(); closeAccDetail(); });
+document.querySelector('.acc-detail-import').addEventListener('click', function(e){ e.stopPropagation(); openImport(); });
+
 document.getElementById('importFileInput').addEventListener('change',function(){
   const file=this.files[0]; if(!file) return;
   const ext=file.name.split('.').pop().toLowerCase();
@@ -944,11 +950,17 @@ function buildCatChips(type,sel){
   const custom=loadCustom()[type]||[];
   cl.innerHTML=[...DEFAULT_CATS[type],...custom].map(c=>{
     const isC=!DEFAULT_CATS[type].includes(c);
-    return `<div class="cchip${isC?' custom':''} ${c===sel?'on':''}" onclick="pickCat('${c}')">${c}</div>`;
+    const on=c===sel?'on':'';
+    return `<div class="cchip${isC?' custom':''} ${on}" data-cat="${c.replace(/"/g,'&quot;')}" onclick="pickCat(this)">${c}</div>`;
   }).join('');
   if(sel)curCat=sel;
 }
-function pickCat(c){document.querySelectorAll('.cchip').forEach(x=>x.classList.remove('on'));document.querySelectorAll(`.cchip[onclick="pickCat('${c}')"]`).forEach(x=>x.classList.add('on'));curCat=c;checkValid();}
+function pickCat(el){
+  document.querySelectorAll('#aCats .cchip').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  curCat=el.dataset.cat;
+  checkValid();
+}
 function checkValid(){document.getElementById('aSave').disabled=!(parseFloat(document.getElementById('aAmt').value)>0&&curCat);}
 function addCustomCat(){
   const inp=document.getElementById('newCatInp'),name=inp.value.trim();
