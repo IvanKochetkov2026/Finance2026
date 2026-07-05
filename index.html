@@ -9,292 +9,330 @@
 <title>Кошелёк</title>
 <style>
 :root{
-  --bg:#F2EFE8;--surface:#FFFFFF;--ink:#1A1A17;--muted:#8A8678;--line:#E2DDD3;
-  --teal:#1F4D43;--teal2:#2A6356;--teal-light:#E2EBE6;
-  --income:#2A7A52;--income-soft:#DFF0E8;
-  --expense:#B84C2A;--expense-soft:#F5E3DB;
-  --gold:#C99B3A;--gold-soft:#F5EDD8;
-  --safe-top: env(safe-area-inset-top, 44px);
-  --safe-bot: env(safe-area-inset-bottom, 20px);
+  --bg:#F2F2F7;
+  --surface:#FFFFFF;
+  --ink:#0A0A0A;
+  --muted:#8E8E93;
+  --line:#E5E5EA;
+  --yellow:#FFDD2D;
+  --yellow-dark:#F5C800;
+  --yellow-text:#1A1400;
+  --income:#00B341;
+  --income-soft:#E6F9EC;
+  --expense:#FF3B30;
+  --expense-soft:#FFF0EF;
+  --dark:#111111;
+  --dark2:#1C1C1E;
+  --safe-top:env(safe-area-inset-top,44px);
+  --safe-bot:env(safe-area-inset-bottom,20px);
+  --r:18px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
-html{height:100%;}
-body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;-webkit-font-smoothing:antialiased;min-height:100%;padding-bottom:calc(140px + var(--safe-bot));}
-button,input,select{font-family:inherit;}
-button{cursor:pointer;}
+html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',Helvetica,sans-serif;-webkit-font-smoothing:antialiased;}
+body{padding-bottom:calc(82px + var(--safe-bot));}
+button{cursor:pointer;font-family:inherit;}
 
-/* ─── LOADING ──────────────────────────────────────────── */
-#loadingScreen{position:fixed;inset:0;background:var(--teal);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px;}
-.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg);}}
-#loadingScreen p{color:#BFD6CC;font-size:14px;}
+/* ── LOADING ── */
+#loadingScreen{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px;}
+#loadingScreen .logo{font-size:48px;animation:pulse2 1.4s ease-in-out infinite;}
+@keyframes pulse2{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+#loadingScreen p{color:#888;font-size:14px;font-weight:500;}
 
-/* ─── AUTH ─────────────────────────────────────────────── */
-#authScreen{position:fixed;inset:0;background:var(--teal);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;padding:max(var(--safe-top),28px) 24px calc(var(--safe-bot) + 24px);}
+/* ── AUTH ── */
+#authScreen{position:fixed;inset:0;background:var(--dark);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;padding:max(var(--safe-top),32px) 24px calc(var(--safe-bot)+24px);}
 #authScreen.show{display:flex;}
-.auth-logo{font-size:56px;margin-bottom:8px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.2));}
-.auth-title{font-size:28px;font-weight:700;color:#fff;letter-spacing:-.5px;}
-.auth-sub{font-size:14px;color:#9FCFBF;margin-bottom:28px;margin-top:4px;}
-.auth-box{width:100%;background:var(--surface);border-radius:22px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
-.auth-tabs{display:flex;gap:4px;background:var(--bg);border-radius:11px;padding:3px;margin-bottom:18px;}
-.auth-tab{flex:1;border:none;background:transparent;padding:10px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);}
-.auth-tab.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 5px rgba(0,0,0,.1);}
+.auth-logo{font-size:52px;margin-bottom:10px;}
+.auth-brand{font-size:30px;font-weight:800;color:#fff;letter-spacing:-1px;}
+.auth-brand span{color:var(--yellow);}
+.auth-sub{font-size:14px;color:#666;margin-bottom:32px;margin-top:4px;}
+.auth-box{width:100%;background:#1C1C1E;border-radius:24px;padding:24px;}
+.auth-tabs{display:flex;gap:4px;background:#2C2C2E;border-radius:12px;padding:3px;margin-bottom:20px;}
+.auth-tab{flex:1;border:none;background:transparent;padding:10px;border-radius:10px;font-size:14px;font-weight:700;color:#666;}
+.auth-tab.on{background:var(--yellow);color:var(--yellow-text);}
 .auth-form{display:none;}
 .auth-form.on{display:block;}
-.auth-lbl{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:12px 0 5px;letter-spacing:.03em;}
+.auth-lbl{display:block;font-size:12px;font-weight:700;color:#666;margin:14px 0 6px;letter-spacing:.04em;text-transform:uppercase;}
 .auth-lbl:first-child{margin-top:0;}
-.auth-inp{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);font-size:16px;color:var(--ink);transition:border-color .2s;}
-.auth-inp:focus{outline:none;border-color:var(--teal);}
-.auth-btn{width:100%;padding:15px;border-radius:13px;border:none;background:var(--teal);color:#fff;font-size:16px;font-weight:700;margin-top:18px;letter-spacing:.01em;}
+.auth-inp{width:100%;padding:14px;border-radius:13px;border:none;background:#2C2C2E;font-size:16px;color:#fff;font-family:inherit;}
+.auth-inp::placeholder{color:#555;}
+.auth-btn{width:100%;padding:15px;border-radius:13px;border:none;background:var(--yellow);color:var(--yellow-text);font-size:16px;font-weight:800;margin-top:20px;letter-spacing:-.2px;}
 .auth-btn:disabled{opacity:.4;}
-.auth-err{font-size:13px;color:var(--expense);text-align:center;margin-top:10px;min-height:18px;line-height:1.4;}
+.auth-err{font-size:13px;color:var(--expense);text-align:center;margin-top:10px;min-height:18px;}
 
-/* ─── HEADER ───────────────────────────────────────────── */
-.header{background:var(--teal);color:#fff;padding:calc(var(--safe-top) + 16px) 20px 20px;position:relative;}
-.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.user-chip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border-radius:999px;padding:6px 12px 6px 8px;}
-.user-avatar{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
-.user-name{font-size:13px;font-weight:500;color:rgba(255,255,255,.9);}
-.logout-btn{background:transparent;border:1.5px solid rgba(255,255,255,.25);color:rgba(255,255,255,.7);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:500;}
+/* ── HEADER ── */
+.header{background:var(--dark);color:#fff;padding:calc(var(--safe-top) + 14px) 20px 22px;}
+.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.user-chip{display:flex;align-items:center;gap:8px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--yellow-text);}
+.user-name{font-size:14px;font-weight:600;color:#AAA;}
+.logout-btn{background:transparent;border:1px solid #333;color:#666;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:600;}
 
-/* Account selector in header */
-.acc-selector{display:flex;align-items:center;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:16px;}
+.acc-selector{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;}
 .acc-selector::-webkit-scrollbar{display:none;}
-.acc-pill{flex:none;display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;border:1.5px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;transition:all .15s;}
-.acc-pill.on{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.4);}
-.acc-pill-ic{font-size:14px;}
-.acc-add-pill{flex:none;width:34px;height:34px;border-radius:50%;border:1.5px dashed rgba(255,255,255,.3);background:transparent;color:rgba(255,255,255,.5);font-size:20px;display:flex;align-items:center;justify-content:center;}
+.acc-pill{flex:none;padding:8px 14px;border-radius:999px;border:1px solid #2A2A2A;background:transparent;color:#777;font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .15s;}
+.acc-pill.on{background:var(--yellow);color:var(--yellow-text);border-color:var(--yellow);}
+.acc-add-pill{flex:none;width:36px;height:36px;border-radius:50%;border:1px dashed #333;background:transparent;color:#555;font-size:22px;display:flex;align-items:center;justify-content:center;}
 
-.balance-label{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px;}
-.balance-num{font-size:44px;font-weight:700;letter-spacing:-1.5px;line-height:1;}
-.balance-cur{font-size:22px;font-weight:500;opacity:.65;margin-left:5px;}
-.stats-row{display:flex;gap:10px;margin-top:16px;}
-.stat{flex:1;background:rgba(255,255,255,.1);border-radius:14px;padding:11px 13px;border:1px solid rgba(255,255,255,.08);}
-.stat-lbl{font-size:11px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:5px;margin-bottom:3px;font-weight:500;letter-spacing:.03em;text-transform:uppercase;}
-.stat-val{font-size:18px;font-weight:700;}
+.balance-label{font-size:13px;color:#555;font-weight:500;margin-bottom:6px;}
+.balance-num{font-size:48px;font-weight:800;letter-spacing:-2px;line-height:1;color:#fff;}
+.balance-cur{font-size:22px;font-weight:600;color:#555;margin-left:6px;letter-spacing:0;}
+
+.stats-row{display:flex;gap:10px;margin-top:18px;}
+.stat{flex:1;background:#1A1A1A;border-radius:14px;padding:12px 14px;border:1px solid #222;}
+.stat-lbl{font-size:11px;color:#555;display:flex;align-items:center;gap:5px;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.stat-val{font-size:18px;font-weight:800;color:#fff;}
 .dot{width:5px;height:5px;border-radius:50%;display:inline-block;}
-.dot-in{background:#6FD4A2;}.dot-out{background:#F5A070;}
+.dot-in{background:#00B341;}.dot-out{background:var(--expense);}
 
-/* ─── TABS ─────────────────────────────────────────────── */
-.nav-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;}
-.nav-tab{flex:1;border:none;background:transparent;padding:13px 4px 11px;font-size:13.5px;font-weight:600;color:var(--muted);position:relative;}
-.nav-tab.on{color:var(--teal);}
-.nav-tab.on::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2.5px;background:var(--teal);border-radius:2px;}
-.view{display:none;padding:16px 18px 0;}
+/* ── BOTTOM TAB BAR ── */
+.tab-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 8px calc(var(--safe-bot)+8px);background:var(--dark);border-top:1px solid #222;z-index:40;display:flex;align-items:center;justify-content:space-around;}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;padding:6px 4px;color:#555;font-size:10px;font-weight:600;letter-spacing:.02em;}
+.tab-item.on{color:var(--yellow);}
+.tab-item .ti{font-size:22px;line-height:1;}
+.tab-add{width:54px;height:54px;border-radius:50%;background:var(--yellow);border:none;display:flex;align-items:center;justify-content:center;margin-top:-22px;box-shadow:0 4px 20px rgba(255,221,45,.35);flex:none;}
+.tab-add-ic{font-size:26px;font-weight:300;color:var(--yellow-text);line-height:1;}
+
+/* ── CONTENT TABS ── */
+.nav-tabs{display:none;}
+.view{display:none;padding:16px 16px 0;}
 .view.on{display:block;}
 
-/* ─── FILTERS ──────────────────────────────────────────── */
+/* ── FILTER CHIPS ── */
 .filters{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;}
 .filters::-webkit-scrollbar{display:none;}
-.chip{flex:none;padding:7px 14px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);font-size:13px;color:var(--muted);font-weight:500;}
+.chip{flex:none;padding:8px 16px;border-radius:999px;background:var(--surface);border:1.5px solid var(--line);font-size:13px;color:var(--muted);font-weight:600;}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 
-/* ─── TRANSACTIONS ─────────────────────────────────────── */
+/* ── TRANSACTIONS ── */
 .empty{text-align:center;padding:60px 20px;color:var(--muted);}
 .empty-ic{font-size:40px;margin-bottom:12px;}
-.empty-t{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:5px;}
-.day-lbl{font-size:11.5px;color:var(--muted);padding:14px 2px 7px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
-.tx{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:16px;padding:13px 14px;margin-bottom:8px;border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.04);}
-.tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none;}
-.tx-icon.in{background:var(--income-soft);}.tx-icon.out{background:var(--expense-soft);}
+.empty-t{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:5px;}
+.day-lbl{font-size:11px;font-weight:700;color:var(--muted);padding:14px 2px 8px;text-transform:uppercase;letter-spacing:.06em;}
+.tx{display:flex;align-items:center;gap:13px;background:var(--surface);border-radius:16px;padding:13px 14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.tx-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none;font-weight:700;}
+.tx-icon.in{background:var(--income-soft);color:var(--income);}
+.tx-icon.out{background:var(--expense-soft);color:var(--expense);}
 .tx-info{flex:1;min-width:0;}
-.tx-cat{font-size:14.5px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:5px;}
+.tx-cat{font-size:15px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:5px;}
 .tx-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;}
-.tx-acc-badge{font-size:11px;background:var(--bg);border-radius:5px;padding:1px 6px;color:var(--muted);}
-.tx-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none;}
-.tx-amt{font-size:15px;font-weight:700;}
+.tx-acc-badge{font-size:11px;background:var(--bg);border-radius:6px;padding:2px 7px;color:var(--muted);font-weight:600;}
+.tx-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none;}
+.tx-amt{font-size:16px;font-weight:800;letter-spacing:-.3px;}
 .tx-amt.in{color:var(--income);}.tx-amt.out{color:var(--expense);}
+.tx-edit{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
 .tx-del{width:22px;height:22px;border-radius:50%;border:none;background:transparent;color:#CCC;font-size:13px;display:flex;align-items:center;justify-content:center;}
-.new-cat-badge{font-size:10px;background:var(--teal-light);color:var(--teal);border-radius:4px;padding:1px 5px;font-weight:600;}
+.new-cat-badge{font-size:10px;background:#EEE;border-radius:5px;padding:2px 6px;color:var(--muted);font-weight:700;}
 
-/* ─── BREAKDOWN ────────────────────────────────────────── */
+/* ── BREAKDOWN ── */
 .section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 2px 10px;}
-.breakdown{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 16px;}
-.bd-row{display:flex;align-items:center;gap:10px;padding:7px 0;}
+.breakdown{background:var(--surface);border-radius:18px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.bd-row{display:flex;align-items:center;gap:10px;padding:8px 0;}
 .bd-row+.bd-row{border-top:1px solid var(--line);}
-.bd-name{font-size:13.5px;width:100px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bd-name{font-size:13px;width:100px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
 .bd-bar{flex:1;height:6px;background:var(--bg);border-radius:99px;overflow:hidden;}
 .bd-fill{height:100%;border-radius:99px;background:var(--expense);}
-.bd-pct{font-size:12px;color:var(--muted);width:34px;text-align:right;flex:none;}
+.bd-pct{font-size:12px;color:var(--muted);width:34px;text-align:right;flex:none;font-weight:600;}
 
-/* ─── ACCOUNTS VIEW ────────────────────────────────────── */
-.acc-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-.acc-card-stripe{position:absolute;top:0;left:0;right:0;height:4px;}
-.acc-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
-.acc-card-icon{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;}
-.acc-card-del{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;}
-.acc-card-name{font-size:17px;font-weight:700;margin-bottom:3px;}
-.acc-card-type{font-size:12px;color:var(--muted);font-weight:500;}
-.acc-card-bal{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px;}
-.acc-card-bal.pos{color:var(--income);}.acc-card-bal.neg{color:var(--expense);}
-.acc-stats{display:flex;gap:16px;}
-.acc-stat{display:flex;flex-direction:column;gap:2px;}
-.acc-stat-l{font-size:11px;color:var(--muted);font-weight:500;}
-.acc-stat-v{font-size:13.5px;font-weight:600;}
-.acc-stat-v.pos{color:var(--income);}.acc-stat-v.neg{color:var(--expense);}
-.add-acc-btn{width:100%;padding:15px;border-radius:16px;border:2px dashed var(--line);background:transparent;color:var(--teal);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
-
-/* ─── ANALYTICS ────────────────────────────────────────── */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:17px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.card-title{font-size:14px;font-weight:700;margin-bottom:3px;}
-.card-sub{font-size:12px;color:var(--muted);margin-bottom:14px;}
+/* ── ANALYTICS ── */
+.card{background:var(--surface);border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.06);}
+.card-title{font-size:15px;font-weight:800;margin-bottom:3px;letter-spacing:-.2px;}
+.card-sub{font-size:12px;color:var(--muted);margin-bottom:16px;font-weight:500;}
 .bars{display:flex;align-items:flex-end;gap:8px;height:130px;}
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
 .bar-pair{display:flex;align-items:flex-end;gap:3px;height:100%;justify-content:center;}
-.bar{width:9px;border-radius:4px 4px 0 0;min-height:3px;}
+.bar{width:9px;border-radius:5px 5px 0 0;min-height:3px;}
 .bar.in{background:var(--income);}.bar.out{background:var(--expense);}
-.bar-ml{font-size:10px;color:var(--muted);margin-top:6px;}
+.bar-ml{font-size:10px;color:var(--muted);margin-top:6px;font-weight:600;}
 .legend{display:flex;gap:14px;margin-top:10px;justify-content:center;}
-.leg-i{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);}
+.leg-i{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);font-weight:600;}
 .leg-sw{width:8px;height:8px;border-radius:2px;}
-.mscroll{display:flex;gap:8px;overflow-x:auto;margin-bottom:6px;}
+.mscroll{display:flex;gap:8px;overflow-x:auto;margin-bottom:8px;}
 .mscroll::-webkit-scrollbar{display:none;}
-.mchip{flex:none;padding:6px 12px;border-radius:999px;background:var(--bg);border:1.5px solid var(--line);font-size:12.5px;color:var(--muted);font-weight:500;}
-.mchip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+.mchip{flex:none;padding:7px 13px;border-radius:999px;background:var(--bg);border:1.5px solid var(--line);font-size:12.5px;color:var(--muted);font-weight:700;}
+.mchip.on{background:var(--yellow);color:var(--yellow-text);border-color:var(--yellow);}
 .kpi-row{display:flex;gap:8px;margin-top:12px;}
-.kpi{flex:1;background:var(--bg);border-radius:13px;padding:12px;}
-.kpi-l{font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:500;}
-.kpi-v{font-size:16px;font-weight:700;}
+.kpi{flex:1;background:var(--bg);border-radius:14px;padding:13px;}
+.kpi-l{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+.kpi-v{font-size:17px;font-weight:800;letter-spacing:-.3px;}
 .kpi-v.pos{color:var(--income);}.kpi-v.neg{color:var(--expense);}
 .donut-wrap{display:flex;align-items:center;gap:16px;}
 .donut-list{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;}
 .donut-item{display:flex;align-items:center;gap:8px;font-size:13px;}
 .donut-sw{width:9px;height:9px;border-radius:50%;flex:none;}
-.donut-nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.donut-vl{font-size:12px;color:var(--muted);flex:none;}
+.donut-nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+.donut-vl{font-size:12px;color:var(--muted);flex:none;font-weight:700;}
 
-/* ─── BOTTOM BAR ───────────────────────────────────────── */
-.bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px calc(var(--safe-bot) + 10px);background:var(--surface);border-top:1px solid var(--line);z-index:30;display:flex;flex-direction:column;gap:8px;box-shadow:0 -4px 20px rgba(0,0,0,.07);}
-.bb-btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:.01em;}
-.bb-add{background:var(--teal);color:#fff;box-shadow:0 4px 14px rgba(31,77,67,.25);}
-.bb-mic{background:var(--bg);color:var(--ink);border:1.5px solid var(--line);}
-.bb-mic.active{background:var(--expense-soft);color:var(--expense);border-color:var(--expense);}
+/* ── BANK CARDS ── */
+.bank-card{border-radius:24px;padding:22px 22px 18px;margin-bottom:14px;position:relative;overflow:hidden;cursor:pointer;min-height:178px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 12px 32px rgba(0,0,0,.22);}
+.bank-card::before{content:'';position:absolute;right:-44px;top:-44px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.09);}
+.bank-card::after{content:'';position:absolute;right:36px;top:60px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.05);}
+.bc-top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;}
+.bc-logo{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.bc-logo img{width:32px;height:32px;object-fit:contain;border-radius:6px;}
+.bc-logo-fallback{font-size:22px;}
+.bc-settings{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.85);font-size:15px;display:flex;align-items:center;justify-content:center;}
+.bc-mid{position:relative;z-index:1;margin:12px 0 8px;}
+.bc-type{font-size:11px;color:rgba(255,255,255,.55);font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.bc-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.4px;margin-top:2px;}
+.bc-bottom{position:relative;z-index:1;}
+.bc-bal-label{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.bc-bal{font-size:30px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.1;}
+.bc-bal-cur{font-size:15px;font-weight:600;opacity:.65;margin-left:4px;}
+.bc-stats{display:flex;gap:20px;margin-top:10px;}
+.bc-stat-l{font-size:10px;color:rgba(255,255,255,.5);margin-bottom:2px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+.bc-stat-v{font-size:13px;font-weight:800;color:rgba(255,255,255,.85);}
+.add-acc-btn{width:100%;padding:16px;border-radius:18px;border:2px dashed var(--line);background:transparent;color:var(--dark);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
 
-/* ─── BACKDROP / SHEET ─────────────────────────────────── */
-.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:none;align-items:flex-end;}
+/* ── ACCOUNT DETAIL ── */
+#accDetail{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column;overscroll-behavior:contain;}
+#accDetail.on{display:flex;}
+.acc-detail-header{color:#fff;padding:calc(var(--safe-top)+14px) 20px 22px;flex:none;}
+.acc-detail-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.back-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;}
+.acc-detail-title{font-size:18px;font-weight:800;flex:1;letter-spacing:-.3px;}
+.acc-detail-import{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;}
+.acc-detail-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:10px;}
+.acc-detail-name{font-size:24px;font-weight:800;letter-spacing:-.5px;}
+.acc-detail-type{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px;font-weight:600;}
+.acc-detail-bal{font-size:40px;font-weight:800;letter-spacing:-1.5px;line-height:1;}
+.acc-detail-bal-cur{font-size:18px;font-weight:600;opacity:.6;margin-left:4px;}
+.acc-detail-stats{display:flex;gap:10px;margin-top:14px;}
+.acc-detail-stat{background:rgba(255,255,255,.1);border-radius:13px;padding:10px 14px;flex:1;}
+.acc-detail-stat .l{font-size:10px;color:rgba(255,255,255,.5);margin-bottom:3px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.acc-detail-stat .v{font-size:17px;font-weight:800;}
+.acc-detail-body{flex:1;overflow-y:auto;padding:16px 16px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.acc-detail-footer{padding:10px 16px calc(var(--safe-bot)+10px);background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;position:relative;z-index:61;flex:none;}
+.acc-detail-imp{flex:none;padding:14px 16px;border-radius:14px;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);font-size:15px;font-weight:700;touch-action:manipulation;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.acc-detail-add{flex:1;padding:14px;border-radius:14px;background:var(--yellow);color:var(--yellow-text);border:none;font-size:15px;font-weight:800;touch-action:manipulation;}
+
+/* ── BANK SEARCH ── */
+.bank-search-wrap{position:relative;margin-bottom:4px;}
+.bank-search-inp{width:100%;padding:13px 14px 13px 42px;border-radius:13px;border:1.5px solid var(--line);background:var(--bg);font-size:16px;color:var(--ink);}
+.bank-search-ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
+.bank-dropdown{position:absolute;left:0;right:0;top:calc(100%+6px);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,.12);z-index:99;max-height:230px;overflow-y:auto;display:none;}
+.bank-dropdown.open{display:block;}
+.bank-opt{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--line);}
+.bank-opt:last-child{border:none;}
+.bank-opt-logo{width:34px;height:34px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;}
+.bank-opt-logo img{width:26px;height:26px;object-fit:contain;}
+.bank-opt-name{font-size:14px;font-weight:700;color:var(--ink);}
+.bank-preview{border-radius:18px;padding:18px;margin:12px 0;display:none;color:#fff;position:relative;overflow:hidden;}
+.bank-preview::before{content:'';position:absolute;right:-20px;top:-20px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.1);}
+.bank-preview-name{font-size:18px;font-weight:800;position:relative;z-index:1;letter-spacing:-.3px;}
+.bank-preview-type{font-size:12px;opacity:.65;margin-top:3px;position:relative;z-index:1;font-weight:600;}
+
+/* ── SETTINGS SHEET ── */
+.settings-row{display:flex;align-items:center;gap:14px;padding:15px;background:var(--surface);border-radius:16px;margin-bottom:8px;cursor:pointer;}
+.settings-row-ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:none;}
+.settings-row-info{flex:1;}
+.settings-row-title{font-size:15px;font-weight:700;}
+.settings-row-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.settings-row-arr{color:var(--muted);font-size:20px;}
+.danger-row .settings-row-ic{background:var(--expense-soft);}
+.danger-row .settings-row-title{color:var(--expense);}
+.delete-confirm{background:var(--expense-soft);border:1.5px solid var(--expense);border-radius:16px;padding:18px;margin-top:8px;display:none;}
+.delete-confirm-t{font-size:15px;font-weight:800;color:var(--expense);margin-bottom:6px;}
+.delete-confirm-s{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+.delete-confirm-btns{display:flex;gap:8px;}
+.delete-cancel{flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:700;color:var(--muted);}
+.delete-confirm-btn{flex:1;padding:13px;border-radius:12px;border:none;background:var(--expense);color:#fff;font-size:14px;font-weight:800;}
+
+/* ── BACKDROP / SHEET ── */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:none;align-items:flex-end;}
 .backdrop.on{display:flex;}
-.sheet{background:var(--bg);width:100%;border-radius:24px 24px 0 0;padding:20px 20px calc(var(--safe-bot) + 24px);max-height:92vh;overflow-y:auto;}
-.sheet-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 18px;}
+.sheet{background:var(--bg);width:100%;border-radius:26px 26px 0 0;padding:20px 20px calc(var(--safe-bot)+24px);max-height:92vh;overflow-y:auto;}
+.sheet-handle{width:40px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 18px;}
 .sheet-head{position:relative;margin-bottom:18px;}
-.sheet-head h2{font-size:19px;font-weight:700;letter-spacing:-.3px;}
-.close-x{position:absolute;right:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;}
-.seg{display:flex;background:var(--surface);border:1.5px solid var(--line);border-radius:13px;padding:3px;margin-bottom:16px;}
-.seg button{flex:1;border:none;background:transparent;padding:11px;border-radius:10px;font-size:14px;font-weight:600;color:var(--muted);}
+.sheet-head h2{font-size:20px;font-weight:800;letter-spacing:-.4px;}
+.close-x{position:absolute;right:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;}
+.seg{display:flex;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:4px;margin-bottom:18px;}
+.seg button{flex:1;border:none;background:transparent;padding:12px;border-radius:11px;font-size:14px;font-weight:700;color:var(--muted);}
 .seg button.on.in{background:var(--income-soft);color:var(--income);}
 .seg button.on.out{background:var(--expense-soft);color:var(--expense);}
-.fl-lbl{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:14px 2px 6px;letter-spacing:.03em;}
-input[type=text],input[type=number],input[type=date]{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font-size:16px;color:var(--ink);transition:border-color .2s;}
-input:focus{outline:none;border-color:var(--teal);}
-.amt-input{font-size:34px;font-weight:700;padding:6px 2px;border:none!important;background:transparent;width:100%;letter-spacing:-1px;}
-.amt-wrap{border-bottom:2px solid var(--line);margin-bottom:6px;display:flex;align-items:baseline;gap:6px;}
-.amt-cur{font-size:20px;color:var(--muted);font-weight:500;}
+.fl-lbl{display:block;font-size:12px;color:var(--muted);font-weight:700;margin:14px 2px 7px;text-transform:uppercase;letter-spacing:.04em;}
+input[type=text],input[type=number],input[type=date]{width:100%;padding:14px;border-radius:13px;border:1.5px solid var(--line);background:var(--surface);font-size:16px;color:var(--ink);font-family:inherit;}
+input:focus{outline:none;border-color:var(--yellow-dark);}
+.amt-input{font-size:36px;font-weight:800;padding:8px 2px;border:none!important;background:transparent;width:100%;letter-spacing:-1.5px;color:var(--ink);}
+.amt-wrap{border-bottom:2.5px solid var(--line);margin-bottom:8px;display:flex;align-items:baseline;gap:6px;}
+.amt-cur{font-size:20px;color:var(--muted);font-weight:700;}
 .cats{display:flex;gap:8px;flex-wrap:wrap;}
-.cchip{padding:9px 14px;border-radius:11px;background:var(--surface);border:1.5px solid var(--line);font-size:13.5px;font-weight:500;}
-.cchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
-.cchip.custom.on{background:var(--teal);border-color:var(--teal);}
-.add-cat-row{display:flex;gap:8px;margin-top:10px;}
-.add-cat-inp{flex:1;padding:10px 12px;border-radius:11px;border:1.5px dashed var(--line);background:var(--surface);font-size:14px;color:var(--ink);}
-.add-cat-btn{padding:10px 15px;border-radius:11px;border:none;background:var(--teal);color:#fff;font-size:13px;font-weight:700;}
-.save-btn{width:100%;padding:16px;border-radius:14px;border:none;background:var(--teal);color:#fff;font-size:16px;font-weight:700;margin-top:22px;letter-spacing:.01em;box-shadow:0 4px 14px rgba(31,77,67,.2);}
-.save-btn:disabled{opacity:.35;box-shadow:none;}
-
-/* Account picker in add sheet */
+.cchip{padding:9px 15px;border-radius:12px;background:var(--surface);border:1.5px solid var(--line);font-size:13.5px;font-weight:600;}
+.cchip.on{background:var(--yellow);color:var(--yellow-text);border-color:var(--yellow);}
+.cchip.custom.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .acc-pick{display:flex;gap:8px;flex-wrap:wrap;}
-.acc-pchip{display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:11px;background:var(--surface);border:1.5px solid var(--line);font-size:13.5px;font-weight:500;}
-.acc-pchip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+.acc-pchip{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:12px;background:var(--surface);border:1.5px solid var(--line);font-size:13.5px;font-weight:600;}
+.acc-pchip.on{background:var(--yellow);color:var(--yellow-text);border-color:var(--yellow);}
+.add-cat-row{display:flex;gap:8px;margin-top:10px;}
+.add-cat-inp{flex:1;padding:10px 13px;border-radius:12px;border:1.5px dashed var(--line);background:var(--surface);font-size:14px;color:var(--ink);}
+.add-cat-btn{padding:10px 16px;border-radius:12px;border:none;background:var(--yellow);color:var(--yellow-text);font-size:13px;font-weight:800;}
+.save-btn{width:100%;padding:16px;border-radius:15px;border:none;background:var(--yellow);color:var(--yellow-text);font-size:16px;font-weight:800;margin-top:22px;letter-spacing:-.1px;}
+.save-btn:disabled{opacity:.35;}
 
-/* Add Account Sheet */
+/* ── TYPE GRID ── */
 .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
-.type-card{padding:14px;border-radius:13px;background:var(--surface);border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--muted);}
-.type-card.on{border-color:var(--teal);background:var(--teal-light);color:var(--teal);}
+.type-card{padding:14px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--muted);}
+.type-card.on{border-color:var(--yellow-dark);background:#FFFAE6;color:var(--yellow-text);}
 .type-card .ic{font-size:26px;}
-.color-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
-.color-dot{width:32px;height:32px;border-radius:50%;border:2px solid transparent;display:flex;align-items:center;justify-content:center;}
-.color-dot.on{border-color:var(--ink);}
 
-/* ─── VOICE SHEET ──────────────────────────────────────── */
-.v-status{text-align:center;font-size:14px;color:var(--muted);padding:8px 0 4px;font-weight:500;}
-.v-wave{display:flex;align-items:center;justify-content:center;gap:5px;height:36px;margin:6px 0;}
-.wbar{width:4px;border-radius:3px;background:var(--teal);height:5px;}
+/* ── VOICE SHEET ── */
+.v-status{text-align:center;font-size:14px;color:var(--muted);padding:8px 0 4px;font-weight:600;}
+.v-wave{display:flex;align-items:center;justify-content:center;gap:5px;height:38px;margin:6px 0;}
+.wbar{width:4px;border-radius:3px;background:var(--yellow-dark);height:5px;}
 .v-wave.on .wbar{animation:wv .8s ease-in-out infinite;}
 .wbar:nth-child(2){animation-delay:.1s;}.wbar:nth-child(3){animation-delay:.2s;}
 .wbar:nth-child(4){animation-delay:.3s;}.wbar:nth-child(5){animation-delay:.15s;}
 @keyframes wv{0%,100%{height:5px;}50%{height:26px;}}
-.v-text{background:var(--surface);border:1.5px solid var(--line);border-radius:13px;padding:14px;font-size:15px;min-height:46px;color:var(--muted);margin:8px 0;line-height:1.5;}
-.v-text.filled{color:var(--ink);}
-.v-parsed{margin-top:10px;display:none;background:var(--surface);border:1px solid var(--line);border-radius:15px;overflow:hidden;}
+.v-text{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:14px;font-size:15px;min-height:46px;color:var(--muted);margin:8px 0;line-height:1.5;}
+.v-text.filled{color:var(--ink);font-weight:600;}
+.v-parsed{margin-top:10px;display:none;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
 .prow{display:flex;align-items:center;gap:10px;padding:11px 15px;border-bottom:1px solid var(--line);}
 .prow:last-child{border:none;}
-.plbl{font-size:12px;color:var(--muted);width:80px;flex:none;font-weight:600;letter-spacing:.02em;}
-.pval{font-size:15px;font-weight:600;flex:1;}
+.plbl{font-size:12px;color:var(--muted);width:80px;flex:none;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+.pval{font-size:15px;font-weight:800;flex:1;}
 .pval.in{color:var(--income);}.pval.out{color:var(--expense);}
-.new-cat-tag{font-size:11px;background:var(--teal);color:#fff;border-radius:5px;padding:2px 6px;margin-left:6px;font-weight:600;}
+.new-cat-tag{font-size:11px;background:var(--yellow);color:var(--yellow-text);border-radius:6px;padding:2px 7px;margin-left:6px;font-weight:800;}
 .v-rec-wrap{text-align:center;margin:16px 0 4px;}
-.v-rec{width:68px;height:68px;border-radius:50%;background:var(--teal);border:none;color:#fff;font-size:28px;box-shadow:0 8px 24px rgba(31,77,67,.3);display:inline-flex;align-items:center;justify-content:center;}
-.v-rec.on{background:var(--expense);box-shadow:0 8px 24px rgba(184,76,42,.3);}
+.v-rec{width:70px;height:70px;border-radius:50%;background:var(--yellow);border:none;color:var(--yellow-text);font-size:28px;box-shadow:0 8px 28px rgba(255,221,45,.4);display:inline-flex;align-items:center;justify-content:center;}
+.v-rec.on{background:var(--expense);color:#fff;box-shadow:0 8px 28px rgba(255,59,48,.3);}
 .v-btns{display:none;gap:10px;margin-top:14px;}
 .v-btns.on{display:flex;}
-.v-retry{flex:1;padding:14px;border-radius:13px;border:1.5px solid var(--line);background:var(--surface);font-size:15px;font-weight:600;color:var(--muted);}
-.v-do{flex:2;padding:14px;border-radius:13px;border:none;background:var(--teal);color:#fff;font-size:15px;font-weight:700;}
+.v-retry{flex:1;padding:14px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font-size:15px;font-weight:700;color:var(--muted);}
+.v-do{flex:2;padding:14px;border-radius:14px;border:none;background:var(--yellow);color:var(--yellow-text);font-size:15px;font-weight:800;}
 .v-do:disabled{opacity:.35;}
 .v-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.8;}
 
-/* ─── ACCOUNT DETAIL SCREEN ────────────────────────────── */
-#accDetail{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column;overscroll-behavior:contain;}
-#accDetail.on{display:flex;}
-.acc-detail-header{background:var(--teal);color:#fff;padding:calc(var(--safe-top) + 14px) 20px 22px;flex:none;}
-.acc-detail-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
-.back-btn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;}
-.acc-detail-title{font-size:18px;font-weight:700;flex:1;}
-.acc-detail-import{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;}
-.acc-detail-icon{width:50px;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px;}
-.acc-detail-name{font-size:22px;font-weight:700;margin-bottom:2px;}
-.acc-detail-type{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px;}
-.acc-detail-bal{font-size:38px;font-weight:700;letter-spacing:-1px;line-height:1;}
-.acc-detail-bal-cur{font-size:18px;font-weight:500;opacity:.6;margin-left:4px;}
-.acc-detail-stats{display:flex;gap:12px;margin-top:14px;}
-.acc-detail-stat{background:rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;flex:1;}
-.acc-detail-stat .l{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:3px;font-weight:500;}
-.acc-detail-stat .v{font-size:17px;font-weight:700;}
-.acc-detail-body{flex:1;overflow-y:auto;padding:16px 18px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
-.acc-detail-footer{padding:10px 16px calc(var(--safe-bot)+10px);background:var(--surface);border-top:1px solid var(--line);display:flex;gap:8px;position:relative;z-index:61;flex:none;}
-.acc-detail-add{flex:1;padding:14px;border-radius:13px;background:var(--teal);color:#fff;border:none;font-size:15px;font-weight:700;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0);}
-.acc-detail-imp{flex:none;padding:14px 16px;border-radius:13px;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);font-size:15px;font-weight:600;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0);cursor:pointer;display:flex;align-items:center;justify-content:center;}
-
-/* ─── IMPORT SHEET ──────────────────────────────────────── */
-.import-zone{border:2px dashed var(--line);border-radius:16px;padding:30px 20px;text-align:center;background:var(--surface);margin-bottom:14px;}
-.import-zone.drag{border-color:var(--teal);background:var(--teal-light);}
-.import-zone-ic{font-size:36px;margin-bottom:10px;}
-.import-zone-t{font-size:15px;font-weight:600;margin-bottom:5px;}
-.import-zone-s{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
-.import-file-btn{display:inline-block;padding:11px 22px;border-radius:11px;background:var(--teal);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
-#importFileInput{display:none;}
+/* ── IMPORT ── */
+.import-zone{border:2px dashed var(--line);border-radius:18px;padding:30px 20px;text-align:center;background:var(--surface);margin-bottom:14px;}
+.import-zone-ic{font-size:38px;margin-bottom:10px;}
+.import-zone-t{font-size:16px;font-weight:800;margin-bottom:6px;letter-spacing:-.2px;}
+.import-zone-s{font-size:13px;color:var(--muted);line-height:1.5;}
 .import-preview{display:none;margin-bottom:14px;}
-.import-preview-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;}
+.import-preview-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
 .import-table{width:100%;border-collapse:collapse;font-size:12px;}
 .import-table th{background:var(--bg);padding:8px 10px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--line);}
 .import-table td{padding:7px 10px;border-bottom:1px solid var(--line);color:var(--ink);}
 .import-table tr:last-child td{border:none;}
-.col-map{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;}
-.col-map-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--ink);}
+.col-map{background:var(--surface);border-radius:16px;padding:16px;margin-bottom:14px;}
+.col-map-title{font-size:14px;font-weight:800;margin-bottom:14px;}
 .col-map-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .col-map-row:last-child{margin-bottom:0;}
-.col-map-lbl{font-size:13px;font-weight:600;width:80px;flex:none;color:var(--muted);}
-.col-map-sel{flex:1;padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:14px;color:var(--ink);}
-.import-result{background:var(--income-soft);border:1px solid var(--income);border-radius:12px;padding:14px;margin-bottom:12px;display:none;}
+.col-map-lbl{font-size:13px;font-weight:700;width:90px;flex:none;color:var(--muted);}
+.col-map-sel{flex:1;padding:9px 12px;border-radius:11px;border:1.5px solid var(--line);background:var(--bg);font-size:14px;color:var(--ink);}
+.import-result{background:var(--income-soft);border:1.5px solid var(--income);border-radius:14px;padding:15px;margin-bottom:12px;display:none;}
 .import-result.err{background:var(--expense-soft);border-color:var(--expense);}
-.import-result-t{font-size:14px;font-weight:700;margin-bottom:4px;}
+.import-result-t{font-size:14px;font-weight:800;margin-bottom:4px;}
 .import-result-s{font-size:13px;color:var(--muted);}
+.import-file-btn{display:inline-block;padding:12px 24px;border-radius:12px;background:var(--yellow);color:var(--yellow-text);font-size:14px;font-weight:800;cursor:pointer;border:none;margin-top:12px;}
 </style>
 </head>
 <body>
 
-<div id="loadingScreen"><div class="spin"></div><p>Загрузка...</p></div>
+<div id="loadingScreen"><div class="logo">💰</div><p>Загрузка...</p></div>
 
 <!-- AUTH -->
 <div id="authScreen">
   <div class="auth-logo">💰</div>
-  <div class="auth-title">Кошелёк</div>
+  <div class="auth-brand">Кошелёк<span>.</span></div>
   <div class="auth-sub">Личный учёт финансов</div>
   <div class="auth-box">
     <div class="auth-tabs">
@@ -332,7 +370,6 @@ input:focus{outline:none;border-color:var(--teal);}
       </div>
       <button class="logout-btn" onclick="doLogout()">Выйти</button>
     </div>
-    <!-- Account pills -->
     <div class="acc-selector" id="accSelector"></div>
     <div class="balance-label" id="balLabel">Общий баланс</div>
     <div class="balance-num"><span id="balVal">0</span><span class="balance-cur">сом</span></div>
@@ -341,12 +378,6 @@ input:focus{outline:none;border-color:var(--teal);}
       <div class="stat"><div class="stat-lbl"><span class="dot dot-out"></span>Расходы</div><div class="stat-val" id="expVal">0</div></div>
     </div>
   </header>
-
-  <div class="nav-tabs">
-    <button class="nav-tab on" id="tH" onclick="switchTab('H')">История</button>
-    <button class="nav-tab" id="tA" onclick="switchTab('A')">Аналитика</button>
-    <button class="nav-tab" id="tC" onclick="switchTab('C')">Счета</button>
-  </div>
 
   <!-- HISTORY -->
   <div class="view on" id="vH">
@@ -357,7 +388,7 @@ input:focus{outline:none;border-color:var(--teal);}
     </div>
     <div id="txList"></div>
     <div id="bdWrap" style="display:none;">
-      <div class="section-title">Расходы по категориям</div>
+      <div class="section-title">По категориям</div>
       <div class="breakdown" id="bdBody"></div>
     </div>
   </div>
@@ -398,10 +429,23 @@ input:focus{outline:none;border-color:var(--teal);}
     <button class="add-acc-btn" onclick="openAddAcc()">＋ Добавить счёт</button>
   </div>
 
-  <!-- BOTTOM BAR -->
-  <div class="bottom-bar">
-    <button class="bb-btn bb-add" onclick="openSheet()">＋ &nbsp;Добавить операцию</button>
-    <button class="bb-btn bb-mic" id="micBtn" onclick="openVoice()">🎙️ &nbsp;Голосовой ввод</button>
+  <!-- BOTTOM TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-item on" id="tH" onclick="switchTab('H')">
+      <span class="ti">📋</span>История
+    </button>
+    <button class="tab-item" id="tA" onclick="switchTab('A')">
+      <span class="ti">📊</span>Аналитика
+    </button>
+    <button class="tab-add" onclick="openSheet()">
+      <span class="tab-add-ic">＋</span>
+    </button>
+    <button class="tab-item" id="tC" onclick="switchTab('C')">
+      <span class="ti">💳</span>Счета
+    </button>
+    <button class="tab-item" onclick="openVoice()">
+      <span class="ti">🎙️</span>Голос
+    </button>
   </div>
 </div>
 
@@ -442,23 +486,73 @@ input:focus{outline:none;border-color:var(--teal);}
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-head">
-      <h2>Новый счёт</h2>
+      <h2>Добавить счёт</h2>
       <button class="close-x" onclick="closeAddAcc()">✕</button>
     </div>
-    <span class="fl-lbl">Название</span>
-    <input type="text" id="accName" placeholder="Например: Mbank, Наличные, Visa">
-    <span class="fl-lbl">Тип</span>
+
+    <!-- Bank search -->
+    <span class="fl-lbl">Банк или кошелёк</span>
+    <div class="bank-search-wrap">
+      <span class="bank-search-ic">🔍</span>
+      <input class="bank-search-inp" type="text" id="bankSearchInp" placeholder="Mbank, Optima, KICB..." autocomplete="off" oninput="filterBanks(this.value)" onfocus="showBankDropdown()" onblur="setTimeout(hideBankDropdown,200)">
+      <div class="bank-dropdown" id="bankDropdown"></div>
+    </div>
+
+    <!-- Card preview -->
+    <div class="bank-preview" id="bankPreview">
+      <div class="bank-preview-name" id="bankPreviewName">Название банка</div>
+      <div class="bank-preview-type" id="bankPreviewType">Дебетовая карта</div>
+    </div>
+
+    <span class="fl-lbl">Название счёта</span>
+    <input type="text" id="accName" placeholder="Например: Зарплатная, Копилка">
+
+    <span class="fl-lbl">Тип карты</span>
     <div class="type-grid" id="accTypeGrid">
-      <div class="type-card on" data-t="debit"><div class="ic">💳</div>Дебетовая карта</div>
-      <div class="type-card" data-t="credit"><div class="ic">🔴</div>Кредитная карта</div>
-      <div class="type-card" data-t="bank"><div class="ic">🏦</div>Банковский счёт</div>
+      <div class="type-card on" data-t="debit"><div class="ic">💳</div>Дебетовая</div>
+      <div class="type-card" data-t="credit"><div class="ic">🔴</div>Кредитная</div>
+      <div class="type-card" data-t="bank"><div class="ic">🏦</div>Счёт в банке</div>
       <div class="type-card" data-t="wallet"><div class="ic">📱</div>Эл. кошелёк</div>
       <div class="type-card" data-t="cash"><div class="ic">💵</div>Наличные</div>
       <div class="type-card" data-t="other"><div class="ic">🗂️</div>Другое</div>
     </div>
-    <span class="fl-lbl">Цвет</span>
-    <div class="color-row" id="colorRow"></div>
+
     <button class="save-btn" onclick="saveAcc()">Создать счёт</button>
+  </div>
+</div>
+
+<!-- ACCOUNT SETTINGS SHEET -->
+<div class="backdrop" id="accSettingsBd" onclick="if(event.target===this)closeAccSettings()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2 id="accSettingsTitle">Настройки счёта</h2>
+      <button class="close-x" onclick="closeAccSettings()">✕</button>
+    </div>
+    <div class="settings-row" onclick="accSettingsRename()">
+      <div class="settings-row-ic" style="background:#EEF2FF;">✏️</div>
+      <div class="settings-row-info">
+        <div class="settings-row-title">Переименовать</div>
+        <div class="settings-row-sub">Изменить название счёта</div>
+      </div>
+      <div class="settings-row-arr">›</div>
+    </div>
+    <div class="settings-row danger-row" onclick="showDeleteConfirm()">
+      <div class="settings-row-ic">🗑️</div>
+      <div class="settings-row-info">
+        <div class="settings-row-title">Удалить счёт</div>
+        <div class="settings-row-sub">Удалит счёт и все его операции</div>
+      </div>
+      <div class="settings-row-arr">›</div>
+    </div>
+    <div class="delete-confirm" id="deleteConfirmBox">
+      <div class="delete-confirm-t">⚠️ Удалить счёт?</div>
+      <div class="delete-confirm-s">Это действие нельзя отменить. Все транзакции этого счёта останутся, но счёт будет удалён.</div>
+      <div class="delete-confirm-btns">
+        <button class="delete-cancel" onclick="hideDeleteConfirm()">Отмена</button>
+        <button class="delete-confirm-btn" onclick="confirmDeleteAcc()">Да, удалить</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -607,6 +701,39 @@ input:focus{outline:none;border-color:var(--teal);}
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- EDIT TRANSACTION SHEET -->
+<div class="backdrop" id="editBd" onclick="if(event.target===this)closeEditTx()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2>Редактировать</h2>
+      <button class="close-x" onclick="closeEditTx()">✕</button>
+    </div>
+    <div class="seg">
+      <button class="on in" id="eBtnIn" onclick="setEditType('income')">↓ Доход</button>
+      <button class="out" id="eBtnOut" onclick="setEditType('expense')">↑ Расход</button>
+    </div>
+    <div class="amt-wrap">
+      <input class="amt-input" type="number" inputmode="decimal" id="eAmt" placeholder="0" oninput="checkEditValid()">
+      <span class="amt-cur">сом</span>
+    </div>
+    <span class="fl-lbl">Счёт</span>
+    <div class="acc-pick" id="eAccPick"></div>
+    <span class="fl-lbl">Категория</span>
+    <div class="cats" id="eCats"></div>
+    <div class="add-cat-row">
+      <input class="add-cat-inp" type="text" id="eNewCatInp" placeholder="+ Новая категория">
+      <button class="add-cat-btn" onclick="addEditCat()">Добавить</button>
+    </div>
+    <span class="fl-lbl">Заметка</span>
+    <input type="text" id="eNote" placeholder="Необязательно">
+    <span class="fl-lbl">Дата</span>
+    <input type="date" id="eDate">
+    <button class="save-btn" id="eSave" onclick="saveEditTx()" style="margin-top:16px;">Сохранить изменения</button>
+    <button onclick="deleteEditTx()" style="width:100%;padding:14px;border-radius:13px;border:none;background:transparent;color:var(--expense);font-size:15px;font-weight:600;margin-top:8px;">Удалить операцию</button>
+  </div>
+</div>
+
 <script>
 if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -724,12 +851,187 @@ async function doRegister(){
 async function doLogout(){if(unsubTx)unsubTx();if(unsubAcc)unsubAcc();await auth.signOut();}
 function authErr(c){const m={'auth/invalid-credential':'Неверный email или пароль','auth/email-already-in-use':'Email уже используется','auth/weak-password':'Пароль слишком короткий','auth/too-many-requests':'Слишком много попыток'};return m[c]||'Ошибка: '+c;}
 
-// ── ACCOUNTS ─────────────────────────────────────────────
-function accRef(){return db.collection('users').doc(uid).collection('accounts');}
+// ── KG BANKS DATABASE ────────────────────────────────────
+const KG_BANKS = [
+  {name:'Mbank',         domain:'mbank.kg',          color:'#E8173E', grad:'linear-gradient(135deg,#E8173E 0%,#FF6B6B 100%)'},
+  {name:'Optima Bank',   domain:'optimabank.kg',      color:'#005BAA', grad:'linear-gradient(135deg,#005BAA 0%,#0088D1 100%)'},
+  {name:'KICB',          domain:'kicb.net',           color:'#003087', grad:'linear-gradient(135deg,#003087 0%,#0055B3 100%)'},
+  {name:'Halyk Bank',    domain:'halykbank.kg',       color:'#007A3D', grad:'linear-gradient(135deg,#007A3D 0%,#00A651 100%)'},
+  {name:'RSK Bank',      domain:'rsk.kg',             color:'#CC0000', grad:'linear-gradient(135deg,#CC0000 0%,#FF3333 100%)'},
+  {name:'Demir Bank',    domain:'demirbank.kg',       color:'#1B1F5F', grad:'linear-gradient(135deg,#1B1F5F 0%,#3D4396 100%)'},
+  {name:'Bakai Bank',    domain:'bakai.kg',           color:'#004F9F', grad:'linear-gradient(135deg,#004F9F 0%,#0070CC 100%)'},
+  {name:'Bai Tushum',   domain:'baitushum.kg',       color:'#007B5E', grad:'linear-gradient(135deg,#007B5E 0%,#00A87E 100%)'},
+  {name:'Aiyl Bank',     domain:'aiylbank.kg',        color:'#2E7D32', grad:'linear-gradient(135deg,#2E7D32 0%,#43A047 100%)'},
+  {name:'Capital Bank',  domain:'capitalbank.kg',     color:'#6A1B9A', grad:'linear-gradient(135deg,#6A1B9A 0%,#9C27B0 100%)'},
+  {name:'Kompanion',     domain:'kompanion.kg',       color:'#E65100', grad:'linear-gradient(135deg,#E65100 0%,#FF8F00 100%)'},
+  {name:'Dos-Credobank', domain:'dos-credobank.kg',   color:'#880E4F', grad:'linear-gradient(135deg,#880E4F 0%,#C2185B 100%)'},
+  {name:'ЭкоБанк',       domain:'ecobank.kg',          color:'#1B5E20', grad:'linear-gradient(135deg,#1B5E20 0%,#388E3C 100%)'},
+  {name:'NurBank',       domain:'nurbank.kg',          color:'#E65100', grad:'linear-gradient(135deg,#E65100 0%,#FFA726 100%)'},
+  {name:'Bank Asia',     domain:'bankasia.kg',         color:'#283593', grad:'linear-gradient(135deg,#283593 0%,#3949AB 100%)'},
+  {name:'MegaPay',       domain:'megacom.kg',          color:'#B71C1C', grad:'linear-gradient(135deg,#B71C1C 0%,#E53935 100%)'},
+  {name:'О! Pay',        domain:'o.kg',                color:'#4A148C', grad:'linear-gradient(135deg,#4A148C 0%,#7B1FA2 100%)'},
+  {name:'ElCat',         domain:'elcat.kg',            color:'#01579B', grad:'linear-gradient(135deg,#01579B 0%,#0288D1 100%)'},
+  {name:'Visa',          domain:'visa.com',            color:'#1A1F71', grad:'linear-gradient(135deg,#1A1F71 0%,#2832C2 100%)'},
+  {name:'Mastercard',    domain:'mastercard.com',      color:'#252525', grad:'linear-gradient(135deg,#252525 0%,#EB001B 100%)'},
+  {name:'Наличные',      domain:'',                    color:'#2E7D52', grad:'linear-gradient(135deg,#2E7D52 0%,#48A999 100%)'},
+  {name:'Другой банк',   domain:'',                    color:'#37474F', grad:'linear-gradient(135deg,#37474F 0%,#607D8B 100%)'},
+];
+
+function bankLogoUrl(domain){
+  if(!domain) return '';
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+}
+
+// ── BANK SEARCH ──────────────────────────────────────────
+let selBank = null;
+
+function filterBanks(q){
+  const list = q.trim().length===0
+    ? KG_BANKS
+    : KG_BANKS.filter(b=>b.name.toLowerCase().includes(q.toLowerCase()));
+  renderBankDropdown(list);
+  document.getElementById('bankDropdown').classList.add('open');
+}
+function showBankDropdown(){ filterBanks(document.getElementById('bankSearchInp').value); }
+function hideBankDropdown(){ document.getElementById('bankDropdown').classList.remove('open'); }
+
+function renderBankDropdown(list){
+  const el = document.getElementById('bankDropdown');
+  el.innerHTML = list.map((b,i)=>`
+    <div class="bank-opt" onclick="selectBank(${KG_BANKS.indexOf(b)})">
+      <div class="bank-opt-logo">
+        ${b.domain
+          ? `<img src="${bankLogoUrl(b.domain)}" onerror="this.style.display='none';this.nextSibling.style.display='block'" alt=""><span style="display:none;font-size:14px">${b.name[0]}</span>`
+          : `<span style="font-size:14px">🏦</span>`}
+      </div>
+      <div>
+        <div class="bank-opt-name">${b.name}</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectBank(idx){
+  selBank = KG_BANKS[idx];
+  document.getElementById('bankSearchInp').value = selBank.name;
+  document.getElementById('accName').placeholder = selBank.name;
+  // Show preview card
+  const prev = document.getElementById('bankPreview');
+  prev.style.display = 'block';
+  prev.style.background = selBank.grad;
+  document.getElementById('bankPreviewName').textContent = selBank.name;
+  document.getElementById('bankPreviewType').textContent = ACCOUNT_TYPES[newAccType]?.label||'Карта';
+  hideBankDropdown();
+}
+
+// ── ADD ACCOUNT ──────────────────────────────────────────
+function openAddAcc(){
+  newAccType='debit'; selBank=null;
+  document.getElementById('bankSearchInp').value='';
+  document.getElementById('accName').value='';
+  document.getElementById('accName').placeholder='Например: Зарплатная, Копилка';
+  document.getElementById('bankPreview').style.display='none';
+  document.querySelectorAll('.type-card').forEach(c=>c.classList.toggle('on',c.dataset.t==='debit'));
+  document.getElementById('accBd').classList.add('on');
+  // Show all banks in dropdown initially
+  filterBanks('');
+}
+function closeAddAcc(){ document.getElementById('accBd').classList.remove('on'); }
+
+document.querySelectorAll('.type-card').forEach(c=>c.addEventListener('click',()=>{
+  newAccType=c.dataset.t;
+  document.querySelectorAll('.type-card').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on');
+  if(selBank) document.getElementById('bankPreviewType').textContent=ACCOUNT_TYPES[newAccType]?.label||'';
+}));
+
+async function saveAcc(){
+  const rawName = document.getElementById('accName').value.trim();
+  const name = rawName || (selBank?.name) || '';
+  if(!name){ alert('Введи название счёта'); return; }
+  const color    = selBank?.color  || '#1F4D43';
+  const grad     = selBank?.grad   || 'linear-gradient(135deg,#1F4D43,#2A6356)';
+  const domain   = selBank?.domain || '';
+  await accRef().add({name, type:newAccType, color, grad, domain, createdAt:Date.now()});
+  closeAddAcc();
+}
+
+// ── ACCOUNT SETTINGS (delete here, not on card) ──────────
+let settingsAccId = null;
+
+function openAccSettings(id, e){
+  e && e.stopPropagation();
+  settingsAccId = id;
+  const a = accounts.find(x=>x.id===id);
+  if(!a) return;
+  document.getElementById('accSettingsTitle').textContent = a.name;
+  document.getElementById('deleteConfirmBox').style.display='none';
+  document.getElementById('accSettingsBd').classList.add('on');
+}
+function closeAccSettings(){ document.getElementById('accSettingsBd').classList.remove('on'); settingsAccId=null; }
+
+function accSettingsRename(){
+  const a = accounts.find(x=>x.id===settingsAccId); if(!a) return;
+  const newName = prompt('Новое название:', a.name);
+  if(newName && newName.trim()) accRef().doc(settingsAccId).update({name:newName.trim()});
+  closeAccSettings();
+}
+function showDeleteConfirm(){ document.getElementById('deleteConfirmBox').style.display='block'; }
+function hideDeleteConfirm(){ document.getElementById('deleteConfirmBox').style.display='none'; }
+async function confirmDeleteAcc(){
+  if(!settingsAccId) return;
+  await accRef().doc(settingsAccId).delete();
+  closeAccSettings();
+  if(detailAccId===settingsAccId) closeAccDetail();
+}
+
+// ── RENDER ACCOUNTS (beautiful card) ─────────────────────
+function renderAccCards(){
+  const el = document.getElementById('accCards');
+  if(!accounts.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ic">🏦</div><div class="empty-t">Нет счетов</div><div>Добавь первый счёт ниже</div></div>`;
+    return;
+  }
+  el.innerHTML = accounts.map(a=>{
+    const atx = txs.filter(t=>t.accountId===a.id);
+    const inc  = atx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const exp  = atx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const bal  = inc-exp;
+    const grad = a.grad || `linear-gradient(135deg,${a.color||'#1F4D43'},${a.color||'#2A6356'})`;
+    const logoHtml = a.domain
+      ? `<img src="${bankLogoUrl(a.domain)}" onerror="this.style.display='none';this.nextSibling.style.display='block'" alt=""><span class="bc-logo-fallback" style="display:none">${(ACCOUNT_TYPES[a.type]?.ic||'💳')}</span>`
+      : `<span class="bc-logo-fallback">${ACCOUNT_TYPES[a.type]?.ic||'💳'}</span>`;
+    return `
+      <div class="bank-card" style="background:${grad}" onclick="openAccDetail('${a.id}')">
+        <div class="bc-top">
+          <div class="bc-logo">${logoHtml}</div>
+          <button class="bc-settings" onclick="openAccSettings('${a.id}',event)">⚙️</button>
+        </div>
+        <div class="bc-mid">
+          <div class="bc-type">${ACCOUNT_TYPES[a.type]?.label||'Счёт'}</div>
+          <div class="bc-name">${esc(a.name)}</div>
+        </div>
+        <div class="bc-bottom">
+          <div class="bc-bal-label">Баланс</div>
+          <div class="bc-bal">${bal>=0?'+':'−'}${fmt(Math.abs(bal))}<span class="bc-bal-cur">сом</span></div>
+          <div class="bc-stats">
+            <div><div class="bc-stat-l">↓ Доходы</div><div class="bc-stat-v">+${fmt(inc)}</div></div>
+            <div><div class="bc-stat-l">↑ Расходы</div><div class="bc-stat-v">−${fmt(exp)}</div></div>
+            <div><div class="bc-stat-l">Операций</div><div class="bc-stat-v">${atx.length}</div></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function accRef(){ return db.collection('users').doc(uid).collection('accounts'); }
 
 function renderAccSelector(){
   const el=document.getElementById('accSelector');
-  const pills=accounts.map(a=>`<button class="acc-pill ${selAccId===a.id?'on':''}" onclick="selAcc('${a.id}')">${ACCOUNT_TYPES[a.type]?.ic||'💳'} ${esc(a.name)}</button>`).join('');
+  const pills=accounts.map(a=>{
+    const grad=a.grad||`linear-gradient(135deg,${a.color||'#1F4D43'},${a.color||'#2A6356'})`;
+    const logo=a.domain?`<img src="${bankLogoUrl(a.domain)}" style="width:16px;height:16px;border-radius:4px;object-fit:contain;margin-right:2px;" onerror="this.style.display='none'" alt="">`:'';
+    return `<button class="acc-pill ${selAccId===a.id?'on':''}" onclick="selAcc('${a.id}')" style="${selAccId===a.id?`background:${grad};color:#fff;border-color:transparent;`:''}">${logo}${esc(a.name)}</button>`;
+  }).join('');
   el.innerHTML=`<button class="acc-pill ${selAccId==='all'?'on':''}" onclick="selAcc('all')">📊 Все</button>${pills}<button class="acc-add-pill" onclick="openAddAcc()">＋</button>`;
 }
 
@@ -740,68 +1042,16 @@ function selAcc(id){
   renderAccSelector(); render();
 }
 
-function renderAccCards(){
-  const el=document.getElementById('accCards');
-  if(!accounts.length){el.innerHTML=`<div class="empty"><div class="empty-ic">🏦</div><div class="empty-t">Нет счетов</div><div>Добавь первый счёт ниже</div></div>`;return;}
-  el.innerHTML=accounts.map(a=>{
-    const atx=txs.filter(t=>t.accountId===a.id);
-    const inc=atx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-    const exp=atx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-    const bal=inc-exp; const col=a.color||'#1F4D43';
-    return `<div class="acc-card" onclick="openAccDetail('${a.id}')" style="cursor:pointer;">
-      <div class="acc-card-stripe" style="background:${col}"></div>
-      <div class="acc-card-top">
-        <div class="acc-card-icon" style="background:${col}20">${ACCOUNT_TYPES[a.type]?.ic||'💳'}</div>
-        <button class="acc-card-del" onclick="event.stopPropagation();delAcc('${a.id}')">✕</button>
-      </div>
-      <div class="acc-card-name">${esc(a.name)}</div>
-      <div class="acc-card-type">${ACCOUNT_TYPES[a.type]?.label||''} &nbsp;·&nbsp; <span style="color:var(--teal);font-weight:600;">Открыть →</span></div>
-      <div class="acc-card-bal ${bal>=0?'pos':'neg'}" style="margin-top:10px">${bal>=0?'+':'−'}${fmt(Math.abs(bal))} <span style="font-size:16px;font-weight:500;opacity:.6">сом</span></div>
-      <div class="acc-stats" style="margin-top:6px">
-        <div class="acc-stat"><div class="acc-stat-l">Доходы</div><div class="acc-stat-v pos">+${fmt(inc)}</div></div>
-        <div class="acc-stat"><div class="acc-stat-l">Расходы</div><div class="acc-stat-v neg">−${fmt(exp)}</div></div>
-        <div class="acc-stat"><div class="acc-stat-l">Операций</div><div class="acc-stat-v">${atx.length}</div></div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function delAcc(id){if(confirm('Удалить счёт?'))await accRef().doc(id).delete();}
-
-function openAddAcc(){
-  newAccType='debit'; newAccColor=ACC_COLORS[0];
-  document.getElementById('accName').value='';
-  document.querySelectorAll('.type-card').forEach(c=>c.classList.toggle('on',c.dataset.t==='debit'));
-  buildColorRow();
-  document.getElementById('accBd').classList.add('on');
-}
-function closeAddAcc(){document.getElementById('accBd').classList.remove('on');}
-
-document.querySelectorAll('.type-card').forEach(c=>c.addEventListener('click',()=>{
-  newAccType=c.dataset.t;
-  document.querySelectorAll('.type-card').forEach(x=>x.classList.remove('on'));
-  c.classList.add('on');
-}));
-
-function buildColorRow(){
-  document.getElementById('colorRow').innerHTML=ACC_COLORS.map(c=>`<div class="color-dot ${c===newAccColor?'on':''}" onclick="pickColor('${c}')" style="background:${c}"></div>`).join('');
-}
-function pickColor(c){newAccColor=c;buildColorRow();}
-
-async function saveAcc(){
-  const name=document.getElementById('accName').value.trim();
-  if(!name){alert('Введи название счёта');return;}
-  await accRef().add({name,type:newAccType,color:newAccColor,createdAt:Date.now()});
-  closeAddAcc();
-}
-
 function buildAccPick(){
   const el=document.getElementById('aAccPick');
   if(!accounts.length){el.innerHTML='<span style="font-size:13px;color:var(--muted)">Сначала добавь счёт на вкладке «Счета»</span>';return;}
   if(!curAccId&&accounts.length)curAccId=accounts[0].id;
-  el.innerHTML=accounts.map(a=>`<div class="acc-pchip ${curAccId===a.id?'on':''}" onclick="pickAcc('${a.id}')">${ACCOUNT_TYPES[a.type]?.ic||'💳'} ${esc(a.name)}</div>`).join('');
+  el.innerHTML=accounts.map(a=>`<div class="acc-pchip ${curAccId===a.id?'on':''}" data-id="${a.id}" onclick="pickAcc(this)">${ACCOUNT_TYPES[a.type]?.ic||'💳'} ${esc(a.name)}</div>`).join('');
 }
-function pickAcc(id){curAccId=id;buildAccPick();checkValid();}
+function pickAcc(el){
+  document.querySelectorAll('#aAccPick .acc-pchip').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); curAccId=el.dataset.id; checkValid();
+}
 
 // ── ACCOUNT DETAIL ───────────────────────────────────────
 function openAccDetail(id){
@@ -838,14 +1088,25 @@ function renderDetailList(atx){
     g.innerHTML=`<div class="day-lbl">${fmtDate(d)}</div>`;
     grp[d].forEach(t=>{
       const div=document.createElement('div');div.className='tx';
-      div.innerHTML=`<div class="tx-icon ${t.type==='income'?'in':'out'}">${t.type==='income'?'↓':'↑'}</div>
-        <div class="tx-info"><div class="tx-cat">${esc(t.category)}</div>${t.note?`<div class="tx-meta">${esc(t.note)}</div>`:''}</div>
-        <div class="tx-right"><div class="tx-amt ${t.type==='income'?'in':'out'}">${t.type==='income'?'+':'−'}${fmt(t.amount)}</div>
-        <button class="tx-del" onclick="delTxDetail('${t.id}')">✕</button></div>`;
+      div.innerHTML=`
+        <div class="tx-icon ${t.type==='income'?'in':'out'}">${t.type==='income'?'↓':'↑'}</div>
+        <div class="tx-info">
+          <div class="tx-cat">${esc(t.category)}</div>
+          ${t.note?`<div class="tx-meta">${esc(t.note)}</div>`:''}
+        </div>
+        <div class="tx-right">
+          <div class="tx-amt ${t.type==='income'?'in':'out'}">${t.type==='income'?'+':'−'}${fmt(t.amount)}</div>
+          <div style="display:flex;gap:4px;">
+            <button class="tx-edit" data-id="${t.id}">✏️</button>
+            <button class="tx-del" data-id="${t.id}">✕</button>
+          </div>
+        </div>`;
       g.appendChild(div);
     });
     el.appendChild(g);
   });
+  el.querySelectorAll('.tx-edit').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openEditTx(b.dataset.id);}));
+  el.querySelectorAll('.tx-del').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();delTxDetail(b.dataset.id);}));
 }
 async function delTxDetail(id){
   await db.collection('users').doc(uid).collection('transactions').doc(id).delete();
@@ -879,19 +1140,28 @@ function renderList(){
       const isCustom=![...DEFAULT_CATS.income,...DEFAULT_CATS.expense].includes(t.category);
       const acc=accounts.find(a=>a.id===t.accountId);
       const div=document.createElement('div');div.className='tx';
-      div.innerHTML=`<div class="tx-icon ${t.type==='income'?'in':'out'}">${t.type==='income'?'↓':'↑'}</div>
+      div.innerHTML=`
+        <div class="tx-icon ${t.type==='income'?'in':'out'}">${t.type==='income'?'↓':'↑'}</div>
         <div class="tx-info">
           <div class="tx-cat">${esc(t.category)}${isCustom?'<span class="new-cat-badge">своя</span>':''}</div>
-          <div class="tx-meta">${acc?`<span class="tx-acc-badge">${ACCOUNT_TYPES[acc.type]?.ic||''} ${esc(acc.name)}</span>`:''}${t.note?`<span>${esc(t.note)}</span>`:''}</div>
+          <div class="tx-meta">
+            ${acc?`<span class="tx-acc-badge">${ACCOUNT_TYPES[acc.type]?.ic||''} ${esc(acc.name)}</span>`:''}
+            ${t.note?`<span>${esc(t.note)}</span>`:''}
+          </div>
         </div>
         <div class="tx-right">
           <div class="tx-amt ${t.type==='income'?'in':'out'}">${t.type==='income'?'+':'−'}${fmt(t.amount)}</div>
-          <button class="tx-del" onclick="delTxMain('${t.id}')">✕</button>
+          <div style="display:flex;gap:4px;">
+            <button class="tx-edit" data-id="${t.id}">✏️</button>
+            <button class="tx-del" data-id="${t.id}">✕</button>
+          </div>
         </div>`;
       g.appendChild(div);
     });
     el.appendChild(g);
   });
+  el.querySelectorAll('.tx-edit').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openEditTx(b.dataset.id);}));
+  el.querySelectorAll('.tx-del').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();delTxMain(b.dataset.id);}));
 }
 async function delTxMain(id){await db.collection('users').doc(uid).collection('transactions').doc(id).delete();}
 
@@ -917,8 +1187,11 @@ function fmtDate(iso){
 
 // ── TABS ─────────────────────────────────────────────────
 function switchTab(t){
-  ['H','A','C'].forEach(x=>{document.getElementById('t'+x).classList.toggle('on',x===t);document.getElementById('v'+x).classList.toggle('on',x===t);});
-  if(t==='A')renderAnalytics();
+  ['H','A','C'].forEach(x=>{
+    document.getElementById('t'+x).classList.toggle('on',x===t);
+    document.getElementById('v'+x).classList.toggle('on',x===t);
+  });
+  if(t==='A') renderAnalytics();
 }
 document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
   document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
@@ -1263,7 +1536,84 @@ function autoCategory(type,desc){
   return'Другое';
 }
 
-// ── VOICE ────────────────────────────────────────────────
+// ── EDIT TRANSACTION ─────────────────────────────────────
+let editTxId=null, editType='expense', editCat='', editAccId='';
+
+function openEditTx(id){
+  const t=txs.find(x=>x.id===id); if(!t) return;
+  editTxId=id; editType=t.type; editCat=t.category; editAccId=t.accountId||'';
+  document.getElementById('eAmt').value=t.amount;
+  document.getElementById('eNote').value=t.note||'';
+  document.getElementById('eDate').value=t.date;
+  setEditType(t.type, t.category);
+  buildEditAccPick(t.accountId);
+  document.getElementById('editBd').classList.add('on');
+}
+function closeEditTx(){ document.getElementById('editBd').classList.remove('on'); editTxId=null; }
+
+function setEditType(tp, selCat){
+  editType=tp; if(!selCat) editCat='';
+  document.getElementById('eBtnIn').classList.toggle('on',tp==='income');
+  document.getElementById('eBtnOut').classList.toggle('on',tp==='expense');
+  buildEditCatChips(tp, selCat||editCat);
+  checkEditValid();
+}
+
+function buildEditCatChips(type, sel){
+  const cl=document.getElementById('eCats');
+  const custom=loadCustom()[type]||[];
+  cl.innerHTML=[...DEFAULT_CATS[type],...custom].map(c=>{
+    const isC=!DEFAULT_CATS[type].includes(c);
+    return `<div class="cchip${isC?' custom':''} ${c===sel?'on':''}" data-cat="${c.replace(/"/g,'&quot;')}" onclick="pickEditCat(this)">${c}</div>`;
+  }).join('');
+  if(sel) editCat=sel;
+}
+function pickEditCat(el){
+  document.querySelectorAll('#eCats .cchip').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); editCat=el.dataset.cat; checkEditValid();
+}
+function addEditCat(){
+  const inp=document.getElementById('eNewCatInp'), name=inp.value.trim();
+  if(!name) return; addCustomCatName(editType, name); inp.value='';
+  buildEditCatChips(editType, name);
+}
+
+function buildEditAccPick(selId){
+  const el=document.getElementById('eAccPick');
+  if(!accounts.length){ el.innerHTML='<span style="font-size:13px;color:var(--muted)">Нет счетов</span>'; return; }
+  editAccId=selId||accounts[0].id;
+  el.innerHTML=accounts.map(a=>`<div class="acc-pchip ${editAccId===a.id?'on':''}" data-id="${a.id}" onclick="pickEditAcc(this)">${ACCOUNT_TYPES[a.type]?.ic||'💳'} ${esc(a.name)}</div>`).join('');
+}
+function pickEditAcc(el){
+  document.querySelectorAll('#eAccPick .acc-pchip').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); editAccId=el.dataset.id;
+}
+
+function checkEditValid(){
+  const a=parseFloat(document.getElementById('eAmt').value);
+  document.getElementById('eSave').disabled=!(a>0&&editCat);
+}
+
+async function saveEditTx(){
+  const a=parseFloat(document.getElementById('eAmt').value);
+  if(!(a>0)||!editCat||!editTxId) return;
+  await db.collection('users').doc(uid).collection('transactions').doc(editTxId).update({
+    type:editType, amount:a, category:editCat,
+    note:document.getElementById('eNote').value.trim(),
+    date:document.getElementById('eDate').value,
+    accountId:editAccId||null
+  });
+  closeEditTx();
+}
+
+async function deleteEditTx(){
+  if(!editTxId) return;
+  if(!confirm('Удалить эту операцию?')) return;
+  await db.collection('users').doc(uid).collection('transactions').doc(editTxId).delete();
+  closeEditTx();
+}
+
+
 function openVoice(){document.getElementById('vBd').classList.add('on');resetVoice();}
 function closeVoice(){stopRec();document.getElementById('vBd').classList.remove('on');}
 function resetVoice(){
